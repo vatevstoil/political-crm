@@ -5,7 +5,7 @@ import Image from 'next/image'
 import { notFound } from 'next/navigation'
 import {
   Edit2, MapPin, Phone, Mail, Calendar, Briefcase,
-  CreditCard, Facebook, Linkedin, Instagram, Users, Hash, Map, Activity
+  Facebook, Linkedin, Instagram, Users, Hash, Map, Activity, LucideIcon
 } from 'lucide-react'
 import { getNotes } from '@/app/actions/notes'
 import { getTasks } from '@/app/actions/tasks'
@@ -17,7 +17,7 @@ interface PersonPageProps {
   params: Promise<{ id: string }>
 }
 
-const DisplayField = ({ label, value, icon: Icon }: { label: string, value: string | null | undefined, icon?: any }) => {
+const DisplayField = ({ label, value, icon: Icon }: { label: string, value: string | null | undefined, icon?: LucideIcon }) => {
   if (!value) return null
   return (
     <div className="flex items-start space-x-3 mb-3">

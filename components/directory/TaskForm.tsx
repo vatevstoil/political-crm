@@ -48,7 +48,7 @@ export default function TaskForm({ personId }: TaskFormProps) {
       } else {
         setError(result.message || 'Грешка')
       }
-    } catch (e) {
+    } catch {
       setError('Възникна грешка')
     } finally {
       setIsPending(false)
