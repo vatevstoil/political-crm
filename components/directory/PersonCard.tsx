@@ -1,7 +1,7 @@
 'use client'
 
 import { Person } from '@prisma/client'
-import { User, MapPin, Phone, Mail } from 'lucide-react'
+import { User, MapPin, Phone, Mail, Briefcase, Vote, Facebook, Linkedin, Instagram } from 'lucide-react'
 import Link from 'next/link'
 import Image from 'next/image'
 import WhatsAppButton from '@/components/communication/WhatsAppButton'
@@ -40,10 +40,16 @@ export default function PersonCard({ person }: PersonCardProps) {
             }`} />
           </div>
           
-          {/* Role Badge */}
-          <span className="inline-flex items-center px-2 py-1 sm:px-3 sm:py-1 rounded-full text-xs font-medium bg-slate-100 text-slate-600">
-            {person.role}
-          </span>
+          <div className="flex flex-col items-end gap-1">
+            <span className="inline-flex items-center px-2 py-1 sm:px-3 sm:py-1 rounded-full text-xs font-medium bg-slate-100 text-slate-600">
+              {person.role}
+            </span>
+            {person.birthDate && (
+              <span className="text-xs text-slate-400 font-medium">
+                {new Date().getFullYear() - new Date(person.birthDate).getFullYear()} г.
+              </span>
+            )}
+          </div>
         </div>
 
         {/* Name & ID */}
@@ -62,6 +68,18 @@ export default function PersonCard({ person }: PersonCardProps) {
         
         {/* Contact Info - Hidden on very small screens */}
         <div className="mt-3 sm:mt-4 space-y-1 sm:space-y-2 hidden sm:block">
+          {person.votingSection && (
+            <div className="flex items-center text-sm text-slate-500">
+              <Vote className="h-4 w-4 mr-2 text-rose-500 flex-shrink-0" />
+              <span className="truncate">Секция: <span className="font-semibold text-slate-700">{person.votingSection}</span></span>
+            </div>
+          )}
+          {person.profession && (
+            <div className="flex items-center text-sm text-slate-500">
+              <Briefcase className="h-4 w-4 mr-2 text-slate-400 flex-shrink-0" />
+              <span className="truncate">{person.profession}</span>
+            </div>
+          )}
           {person.city && (
             <div className="flex items-center text-sm text-slate-500">
               <MapPin className="h-4 w-4 mr-2 text-blue-500 flex-shrink-0" />
@@ -107,6 +125,42 @@ export default function PersonCard({ person }: PersonCardProps) {
                 <WhatsAppButton phone={person.phone} name={person.fullName} />
               </span>
             </>
+          )}
+          {person.socialFb && (
+            <a 
+              href={person.socialFb}
+              target="_blank"
+              rel="noopener noreferrer"
+              onClick={(e) => e.stopPropagation()}
+              className="p-1.5 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
+              title="Facebook"
+            >
+              <Facebook className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
+            </a>
+          )}
+          {person.socialInstagram && (
+            <a 
+              href={person.socialInstagram}
+              target="_blank"
+              rel="noopener noreferrer"
+              onClick={(e) => e.stopPropagation()}
+              className="p-1.5 text-slate-400 hover:text-pink-600 hover:bg-pink-50 rounded-lg transition-colors"
+              title="Instagram"
+            >
+              <Instagram className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
+            </a>
+          )}
+          {person.socialLinkedin && (
+            <a 
+              href={person.socialLinkedin}
+              target="_blank"
+              rel="noopener noreferrer"
+              onClick={(e) => e.stopPropagation()}
+              className="p-1.5 text-slate-400 hover:text-blue-700 hover:bg-blue-50 rounded-lg transition-colors"
+              title="LinkedIn"
+            >
+              <Linkedin className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
+            </a>
           )}
           {person.email && (
             <a 

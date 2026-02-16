@@ -3,10 +3,12 @@
 import { Person } from '@prisma/client'
 import { useState } from 'react'
 import PersonCard from './PersonCard'
-import { Trash2, UserCheck, UserX, Users, UserMinus } from 'lucide-react'
+import { Trash2, UserCheck, UserX, Users, UserMinus, Mail, Send } from 'lucide-react'
 import { deletePeople, updatePeopleStatus, addPeopleToGroup, removePeopleFromGroup } from '@/app/actions/bulk'
 import { getGroups } from '@/app/actions/groups'
 import { SkeletonGrid } from '@/components/common/Skeleton'
+import EmailComposeModal from '@/components/communication/EmailComposeModal'
+import { toast } from 'sonner'
 
 interface DirectoryGridProps {
   people: Person[]
@@ -21,6 +23,8 @@ export default function DirectoryGrid({ people, onSelectionChange, isLoading: is
   const [showGroupMenu, setShowGroupMenu] = useState(false)
   const [showRemoveGroupMenu, setShowRemoveGroupMenu] = useState(false)
   const [groups, setGroups] = useState<{ id: number; name: string; color: string }[]>([])
+  const [showEmailModal, setShowEmailModal] = useState(false)
+  const [emailRecipients, setEmailRecipients] = useState<{email: string; name: string}[]>([])
 
   const isLoading = isLoadingProp || isLoadingState
 
@@ -289,8 +293,34 @@ export default function DirectoryGrid({ people, onSelectionChange, isLoading: is
                 </div>
               )}
             </div>
+
+            <button
+              onClick={() => {
+                const recipients = people
+                  .filter(p => selectedIds.has(p.id) && p.email)
+                  .map(p => ({ email: p.email!, name: p.fullName }))
+                if (recipients.length === 0) {
+                  toast.warning('Няма имейли за изпращане')
+                  return
+                }
+                setEmailRecipients(recipients)
+                setShowEmailModal(true)
+              }}
+              className="p-2.5 rounded-xl hover:bg-blue-600 transition-colors flex items-center gap-2"
+              title="Имейл"
+            >
+              <Mail className="w-5 h-5" />
+            </button>
           </div>
         </div>
+      )}
+      
+      {showEmailModal && (
+        <EmailComposeModal
+          isOpen={showEmailModal}
+          onClose={() => setShowEmailModal(false)}
+          recipients={emailRecipients}
+        />
       )}
     </>
   )

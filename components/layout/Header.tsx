@@ -3,7 +3,8 @@
 import { useState } from 'react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { Users, Menu, X, Home, FolderOpen, Search, Settings, Calendar } from 'lucide-react'
+import { Users, Menu, X, Home, FolderOpen, Search, Calendar } from 'lucide-react'
+import ThemeToggle from './ThemeToggle'
 
 export default function Header() {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
@@ -48,14 +49,19 @@ export default function Header() {
             ))}
           </nav>
 
-          {/* Mobile menu button */}
-          <button 
-            className="md:hidden p-2 rounded-lg text-white/90 hover:text-white hover:bg-white/10 transition-colors"
-            onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-            aria-label="Меню"
-          >
-            {isMobileMenuOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
-          </button>
+          {/* Right side */}
+          <div className="flex items-center gap-2">
+            <ThemeToggle />
+            
+            {/* Mobile menu button */}
+            <button 
+              className="md:hidden p-2 rounded-lg text-white/90 hover:text-white hover:bg-white/10 transition-colors"
+              onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+              aria-label="Меню"
+            >
+              {isMobileMenuOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
+            </button>
+          </div>
         </div>
 
         {/* Mobile Navigation */}

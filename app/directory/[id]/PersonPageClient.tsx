@@ -8,7 +8,7 @@ import Link from 'next/link'
 import Image from 'next/image'
 import { 
   Edit2, MapPin, Phone, Mail, Calendar, Briefcase,
-  Facebook, Linkedin, Instagram, Users, Hash, Map, Activity
+  Facebook, Linkedin, Instagram, Users, Hash, Map, Activity, Printer
 } from 'lucide-react'
 import { getNotes } from '@/app/actions/notes'
 import { getTasks } from '@/app/actions/tasks'
@@ -56,6 +56,80 @@ export default function PersonPageClient({ person: initialPerson, personId }: Pe
   const handleUpdate = async (field: string, value: string) => {
     await updateField(personId, field, value)
     setPerson((prev: Person) => ({ ...prev, [field]: value }))
+  }
+
+  const handlePrint = () => {
+    const printContent = `
+      <!DOCTYPE html>
+      <html>
+      <head>
+        <title>Профил - ${person.fullName}</title>
+        <style>
+          * { margin: 0; padding: 0; box-sizing: border-box; }
+          body { font-family: Arial, sans-serif; padding: 40px; color: #333; line-height: 1.6; }
+          .header { text-align: center; margin-bottom: 30px; padding-bottom: 20px; border-bottom: 2px solid #333; }
+          .avatar { width: 100px; height: 100px; border-radius: 50%; background: #ddd; margin: 0 auto 20px; display: flex; align-items: center; justify-content: center; font-size: 40px; }
+          h1 { font-size: 28px; margin-bottom: 10px; }
+          .role { display: inline-block; background: #e0e0e0; padding: 5px 15px; border-radius: 20px; font-size: 14px; }
+          .section { margin-bottom: 25px; }
+          .section h2 { font-size: 18px; border-bottom: 1px solid #ddd; padding-bottom: 8px; margin-bottom: 15px; }
+          .field { margin-bottom: 10px; }
+          .label { font-weight: bold; font-size: 12px; color: #666; text-transform: uppercase; }
+          .value { font-size: 14px; }
+          .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+          .footer { margin-top: 40px; text-align: center; font-size: 12px; color: #999; }
+        </style>
+      </head>
+      <body>
+        <div class="header">
+          <div class="avatar">${person.fullName.charAt(0)}</div>
+          <h1>${person.fullName}</h1>
+          <span class="role">${person.role || 'Без роля'} | ${person.status === 'Active' ? 'Активен' : 'Неактивен'}</span>
+        </div>
+        
+        <div class="grid">
+          <div class="section">
+            <h2>Контакти</h2>
+            ${person.email ? `<div class="field"><div class="label">Имейл</div><div class="value">${person.email}</div></div>` : ''}
+            ${person.phone ? `<div class="field"><div class="label">Телефон</div><div class="value">${person.phone}</div></div>` : ''}
+            ${person.membershipCardId ? `<div class="field"><div class="label">Карта №</div><div class="value">${person.membershipCardId}</div></div>` : ''}
+          </div>
+          
+          <div class="section">
+            <h2>Локация</h2>
+            ${person.city ? `<div class="field"><div class="label">Град</div><div class="value">${person.city}</div></div>` : ''}
+            ${person.region ? `<div class="field"><div class="label">Област</div><div class="value">${person.region}</div></div>` : ''}
+            ${person.address ? `<div class="field"><div class="label">Адрес</div><div class="value">${person.address}</div></div>` : ''}
+          </div>
+          
+          <div class="section">
+            <h2>Лични Данни</h2>
+            ${person.birthDate ? `<div class="field"><div class="label">Роден на</div><div class="value">${new Date(person.birthDate).toLocaleDateString('bg-BG')}</div></div>` : ''}
+            ${person.gender ? `<div class="field"><div class="label">Пол</div><div class="value">${person.gender === 'Male' ? 'Мъж' : person.gender === 'Female' ? 'Жена' : person.gender}</div></div>` : ''}
+            ${person.profession ? `<div class="field"><div class="label">Професия</div><div class="value">${person.profession}</div></div>` : ''}
+            ${person.employer ? `<div class="field"><div class="label">Работодател</div><div class="value">${person.employer}</div></div>` : ''}
+          </div>
+          
+          <div class="section">
+            <h2>Избори</h2>
+            ${person.votingSection ? `<div class="field"><div class="label">Секция</div><div class="value">${person.votingSection}</div></div>` : ''}
+            ${person.votingMobile ? `<div class="field"><div class="label">Мобилна урна</div><div class="value">${person.votingMobile}</div></div>` : ''}
+          </div>
+        </div>
+        
+        <div class="footer">
+          Отпечатано от Political CRM - ${new Date().toLocaleDateString('bg-BG')}
+        </div>
+      </body>
+      </html>
+    `
+    
+    const printWindow = window.open('', '_blank')
+    if (printWindow) {
+      printWindow.document.write(printContent)
+      printWindow.document.close()
+      printWindow.print()
+    }
   }
 
   const DisplayField = ({ label, value, icon: Icon }: { label: string, value: string | null | undefined, icon?: any }) => {
@@ -137,11 +211,18 @@ export default function PersonPageClient({ person: initialPerson, personId }: Pe
 
               <Link
                 href={`/directory/${person.id}/edit`}
-                className="glass-button w-full py-2.5 flex items-center justify-center gap-2 text-sm font-medium text-slate-700"
+                className="glass-button flex-1 py-2.5 flex items-center justify-center gap-2 text-sm font-medium text-slate-700"
               >
                 <Edit2 className="h-4 w-4" />
-                Редактирай профил
+                Редактирай
               </Link>
+              <button
+                onClick={handlePrint}
+                className="glass-button flex-1 py-2.5 flex items-center justify-center gap-2 text-sm font-medium text-slate-700"
+              >
+                <Printer className="h-4 w-4" />
+                Принтирай
+              </button>
             </div>
 
             <div className="glass-panel p-5">

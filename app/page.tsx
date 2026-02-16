@@ -38,6 +38,27 @@ export default async function DashboardPage() {
       {/* Map Section */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <MapVisualization geoData={stats.geoData} />
+        
+        {/* Cities without coordinates */}
+        {stats.citiesWithoutCoords.length > 0 && (
+          <div className="mt-4 glass-card p-4">
+            <h3 className="text-sm font-semibold text-slate-700 mb-2">
+              Допълнителни градове (без координати на картата):
+            </h3>
+            <div className="flex flex-wrap gap-2">
+              {stats.citiesWithoutCoords.map((city) => (
+                <a
+                  key={city.city}
+                  href={`/directory?city=${encodeURIComponent(city.city)}`}
+                  className="inline-flex items-center px-3 py-1 rounded-full text-sm bg-slate-100 text-slate-700 hover:bg-slate-200 transition-colors"
+                >
+                  {city.city}
+                  <span className="ml-1 text-slate-500">({city._count.id})</span>
+                </a>
+              ))}
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Task Stats Section */}

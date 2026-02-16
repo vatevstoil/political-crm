@@ -23,6 +23,7 @@ export type DashboardStats = {
       }
     }[]
   }
+  citiesWithoutCoords: { city: string; _count: { id: number } }[]
   byAgeGroup: {
     group: string
     count: number
@@ -156,7 +157,7 @@ export async function getDashboardStats(): Promise<DashboardStats> {
   const ageGroups = calculateAgeGroups(allPeople)
 
   // Добавяме координати към byCity данните
-  const byCityWithCoords = byCity
+  const allCities = byCity
     .filter((c) => c.city !== null)
     .map((c) => {
       const coords = getCityCoordinates(c.city as string)
@@ -166,7 +167,12 @@ export async function getDashboardStats(): Promise<DashboardStats> {
         coordinates: coords,
       }
     })
-    .filter((c) => c.coordinates !== null) // Премахваме градове без координати
+
+  // Само градове с координати за картата
+  const byCityWithCoords = allCities.filter((c) => c.coordinates !== null)
+  
+  // Градове без координати (за статистика)
+  const citiesWithoutCoords = allCities.filter((c) => c.coordinates === null)
 
   // Създаваме GeoJSON формат за картата
   const geoData = {
@@ -188,8 +194,9 @@ export async function getDashboardStats(): Promise<DashboardStats> {
     totalMembers,
     newThisMonth,
     activeMembers,
-    byCity: byCityWithCoords,
+    byCity: allCities,
     geoData,
+    citiesWithoutCoords,
     byAgeGroup: ageGroups,
     upcomingBirthdays,
     taskStats: taskStatsResult,

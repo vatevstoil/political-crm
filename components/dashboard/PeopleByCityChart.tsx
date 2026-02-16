@@ -10,6 +10,8 @@ import {
   Legend,
 } from 'chart.js'
 import { Bar } from 'react-chartjs-2'
+import { useRouter } from 'next/navigation'
+import { useCallback } from 'react'
 
 ChartJS.register(CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend)
 
@@ -18,6 +20,18 @@ interface PeopleByCityChartProps {
 }
 
 export default function PeopleByCityChart({ data }: PeopleByCityChartProps) {
+  const router = useRouter()
+
+  const handleClick = useCallback((event: any, elements: any[]) => {
+    if (elements.length > 0) {
+      const index = elements[0].index
+      const city = data[index]?.city
+      if (city) {
+        router.push(`/directory?city=${encodeURIComponent(city)}`)
+      }
+    }
+  }, [data, router])
+
   const chartData = {
     labels: data.map((d) => d.city || 'Без град'),
     datasets: [
@@ -27,6 +41,7 @@ export default function PeopleByCityChart({ data }: PeopleByCityChartProps) {
         backgroundColor: 'rgba(59, 130, 246, 0.8)',
         borderColor: 'rgb(59, 130, 246)',
         borderWidth: 1,
+        cursor: 'pointer',
       },
     ],
   }
@@ -34,16 +49,24 @@ export default function PeopleByCityChart({ data }: PeopleByCityChartProps) {
   const options = {
     responsive: true,
     maintainAspectRatio: false,
+    onClick: handleClick,
     plugins: {
       legend: {
         display: false,
       },
       title: {
         display: true,
-        text: 'Членове по градове',
+        text: 'Членове по градове (кликни за филтриране)',
         font: { size: 14 },
         color: '#374151',
       },
+      tooltip: {
+        callbacks: {
+          label: (context: any) => {
+            return `${context.raw} членове`
+          }
+        }
+      }
     },
     scales: {
       y: {
