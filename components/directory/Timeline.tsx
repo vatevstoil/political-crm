@@ -16,6 +16,7 @@ interface TaskWithAssignees {
   id: number
   title: string
   description: string | null
+  priority: string
   dueDate: Date | null
   isCompleted: boolean
   createdAt: Date
@@ -72,7 +73,7 @@ export default function Timeline({ notes, tasks, personId }: TimelineProps) {
               <MessageSquare className="h-8 w-8 text-blue-400" />
             </div>
             <p className="text-slate-600 font-medium">Няма бележки</p>
-            <p className="text-sm text-slate-400 mt-1">Добави първата си бележка по-горе</p>
+            <p className="text-sm text-slate-500 mt-1">Добави първата си бележка по-горе</p>
           </div>
         ) : (
           <div className="space-y-3">
@@ -81,7 +82,7 @@ export default function Timeline({ notes, tasks, personId }: TimelineProps) {
                 <div className="absolute left-0 top-0 bottom-0 w-1 bg-gradient-to-b from-blue-400 to-purple-500 rounded-l-lg" />
                 <p className="text-slate-700 whitespace-pre-wrap leading-relaxed">{note.content}</p>
                 <div className="mt-3 flex items-center justify-between">
-                  <div className="flex items-center text-xs text-slate-400">
+                  <div className="flex items-center text-xs text-slate-500">
                     <div className="w-6 h-6 rounded-full bg-gradient-to-br from-blue-100 to-purple-100 flex items-center justify-center mr-2">
                       <MessageSquare className="h-3 w-3 text-blue-500" />
                     </div>
@@ -96,7 +97,7 @@ export default function Timeline({ notes, tasks, personId }: TimelineProps) {
                   </div>
                   <button
                     onClick={() => handleDeleteNote(note.id)}
-                    className="opacity-0 group-hover:opacity-100 text-slate-400 hover:text-red-500 transition-all p-2 hover:bg-red-50 rounded-lg"
+                    className="opacity-0 group-hover:opacity-100 text-slate-500 hover:text-red-500 transition-all p-2 hover:bg-red-50 rounded-lg"
                     title="Изтрий бележката"
                   >
                     <Trash2 className="h-4 w-4" />

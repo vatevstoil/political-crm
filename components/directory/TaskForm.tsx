@@ -2,7 +2,7 @@
 
 import { useState, useRef, useEffect } from 'react'
 import { createTask, getAllPeople } from '@/app/actions/tasks'
-import { Plus, Calendar, Users, CheckSquare } from 'lucide-react'
+import { Plus, Calendar, Users, CheckSquare, Flag } from 'lucide-react'
 
 interface Person {
   id: number
@@ -15,6 +15,12 @@ interface TaskFormProps {
   personId: number
 }
 
+const priorityOptions = [
+  { value: 'low', label: 'Ниска', color: 'text-green-600' },
+  { value: 'medium', label: 'Средна', color: 'text-amber-500' },
+  { value: 'high', label: 'Висока', color: 'text-red-500' },
+]
+
 export default function TaskForm({ personId }: TaskFormProps) {
   const [isPending, setIsPending] = useState(false)
   const [message, setMessage] = useState<string | null>(null)
@@ -22,6 +28,7 @@ export default function TaskForm({ personId }: TaskFormProps) {
   const [showAssignees, setShowAssignees] = useState(false)
   const [people, setPeople] = useState<Person[]>([])
   const [selectedAssignees, setSelectedAssignees] = useState<number[]>([personId])
+  const [selectedPriority, setSelectedPriority] = useState<string>('medium')
   const formRef = useRef<HTMLFormElement>(null)
 
   useEffect(() => {
@@ -36,6 +43,8 @@ export default function TaskForm({ personId }: TaskFormProps) {
     selectedAssignees.forEach(id => {
       formData.append('assigneeIds', id.toString())
     })
+
+    formData.append('priority', selectedPriority)
 
     try {
       const result = await createTask(personId, { message: null, errors: {} }, formData)
@@ -77,13 +86,13 @@ export default function TaskForm({ personId }: TaskFormProps) {
           type="text"
           name="title"
           placeholder="Заглавие на задачата..."
-          className="glass-input w-full px-4 py-2.5 text-slate-700 placeholder:text-slate-400"
+          className="glass-input w-full px-4 py-2.5 text-slate-700 placeholder:text-slate-600"
           required
         />
 
-        <div className="flex gap-2">
-          <div className="relative flex-1">
-            <Calendar className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-slate-400" />
+        <div className="grid grid-cols-2 gap-2">
+          <div className="relative">
+            <Calendar className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-slate-600" />
             <input
               type="date"
               name="dueDate"
@@ -91,21 +100,41 @@ export default function TaskForm({ personId }: TaskFormProps) {
             />
           </div>
 
+          <div className="relative">
+            <select
+              value={selectedPriority}
+              onChange={(e) => setSelectedPriority(e.target.value)}
+              className="glass-button w-full px-3 py-2 flex items-center gap-2 appearance-none cursor-pointer pr-8 text-slate-700"
+            >
+              {priorityOptions.map(opt => (
+                <option key={opt.value} value={opt.value}>{opt.label}</option>
+              ))}
+            </select>
+            <Flag className={`absolute right-2 top-1/2 transform -translate-y-1/2 h-4 w-4 pointer-events-none ${
+              selectedPriority === 'high' ? 'text-red-500' :
+              selectedPriority === 'medium' ? 'text-amber-500' : 'text-green-500'
+            }`} />
+          </div>
+        </div>
+
+        <div className="flex gap-2">
           <button
             type="button"
             onClick={() => setShowAssignees(!showAssignees)}
-            className={`glass-button px-3 py-2 flex items-center gap-2 ${
+            className={`glass-button px-3 py-2 flex-1 flex items-center justify-center gap-2 ${
               showAssignees ? 'bg-blue-50 border-blue-200' : ''
             }`}
           >
             <Users className="h-4 w-4 text-slate-600" />
-            <span className="text-sm text-slate-600">{selectedAssignees.length}</span>
+            <span className="text-sm text-slate-600">
+              {selectedAssignees.length > 0 ? `${selectedAssignees.length} Отг.` : 'Отговорници'}
+            </span>
           </button>
 
           <button
             type="submit"
             disabled={isPending}
-            className="glass-button-primary px-4 py-2 flex items-center gap-2 disabled:opacity-50"
+            className="glass-button-primary px-4 py-2 flex-1 flex items-center justify-center gap-2 disabled:opacity-50"
           >
             {isPending ? (
               <svg className="animate-spin h-4 w-4" viewBox="0 0 24 24">
@@ -138,7 +167,7 @@ export default function TaskForm({ personId }: TaskFormProps) {
                 <div className="flex-1">
                   <span className="text-sm text-slate-700">{person.fullName}</span>
                   {person.role && (
-                    <span className="text-xs text-slate-400 ml-2">({person.role})</span>
+                    <span className="text-xs text-slate-500 ml-2">({person.role})</span>
                   )}
                 </div>
               </label>

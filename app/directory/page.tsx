@@ -1,6 +1,7 @@
 import { getPeople } from '@/app/actions/people'
-import DirectoryGrid from '@/components/directory/DirectoryGrid'
+import DirectoryClient from '@/components/directory/DirectoryClient'
 import FilterBar from '@/components/directory/FilterBar'
+import Pagination from '@/components/common/Pagination'
 import Link from 'next/link'
 import { Plus, Users } from 'lucide-react'
 
@@ -13,14 +14,22 @@ export default async function DirectoryPage({ searchParams }: DirectoryPageProps
   const q = typeof resolvedSearchParams.q === 'string' ? resolvedSearchParams.q : ''
   const role = typeof resolvedSearchParams.role === 'string' ? resolvedSearchParams.role : ''
   const city = typeof resolvedSearchParams.city === 'string' ? resolvedSearchParams.city : ''
+  const status = typeof resolvedSearchParams.status === 'string' ? resolvedSearchParams.status : ''
+  const profession = typeof resolvedSearchParams.profession === 'string' ? resolvedSearchParams.profession : ''
+  const gender = typeof resolvedSearchParams.gender === 'string' ? resolvedSearchParams.gender : ''
+  const group = typeof resolvedSearchParams.group === 'string' ? resolvedSearchParams.group : ''
   const page = typeof resolvedSearchParams.page === 'string' ? parseInt(resolvedSearchParams.page) : 1
 
   const { people, total, totalPages, currentPage } = await getPeople({
     query: q,
     role,
     city,
+    status,
+    profession,
+    gender,
+    groupId: group,
     page,
-    limit: 12, // Items per page
+    limit: 12,
   })
 
 return (
@@ -49,21 +58,25 @@ return (
           </Link>
         </div>
 
-        {/* Filters */}
-        <FilterBar initialSearch={q} initialRole={role} initialCity={city} />
+        {/* Filters & Grid */}
+        <DirectoryClient 
+          people={people}
+          total={total}
+          currentPage={currentPage}
+          totalPages={totalPages}
+          initialSearch={q}
+          initialRole={role}
+          initialCity={city}
+          initialStatus={status}
+          initialProfession={profession}
+          initialGender={gender}
+          initialGroup={group}
+        />
 
-        {/* Stats */}
-        <div className="flex justify-between items-center mb-6 px-2">
-          <span className="text-sm text-slate-600">
-            Общо намерени: <span className="font-bold text-slate-900">{total}</span>
-          </span>
-          <span className="text-sm text-slate-500">
-            Страница {currentPage} от {totalPages}
-          </span>
+        {/* Pagination */}
+        <div className="mt-8 flex justify-center">
+            <Pagination totalPages={totalPages} currentPage={currentPage} />
         </div>
-
-        {/* Grid */}
-        <DirectoryGrid people={people} />
 
         {/* Bottom spacing */}
         <div className="pb-12" />

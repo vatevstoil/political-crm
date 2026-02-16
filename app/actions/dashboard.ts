@@ -63,6 +63,13 @@ export type DashboardStats = {
       }
     }[]
   }[]
+  upcomingEvents: {
+    id: number
+    title: string
+    startTime: Date
+    endTime: Date | null
+    location: string | null
+  }[]
 }
 
 export async function getDashboardStats(): Promise<DashboardStats> {
@@ -81,6 +88,7 @@ export async function getDashboardStats(): Promise<DashboardStats> {
     taskStatsResult,
     overdueTasksResult,
     upcomingTasksResult,
+    upcomingEventsResult,
   ] = await Promise.all([
     prisma.person.count(),
     prisma.person.count({
@@ -134,6 +142,13 @@ export async function getDashboardStats(): Promise<DashboardStats> {
       orderBy: { dueDate: 'asc' },
       take: 10,
     }),
+    prisma.event.findMany({
+      where: {
+        startTime: { gte: today },
+      },
+      orderBy: { startTime: 'asc' },
+      take: 5,
+    }),
   ])
 
   const upcomingBirthdays = getUpcomingBirthdays(allPeople)
@@ -180,6 +195,7 @@ export async function getDashboardStats(): Promise<DashboardStats> {
     taskStats: taskStatsResult,
     overdueTasks: overdueTasksResult,
     upcomingTasks: upcomingTasksResult,
+    upcomingEvents: upcomingEventsResult,
   }
 }
 

@@ -44,7 +44,7 @@ export default function NoteForm({ personId }: { personId: number }) {
         <textarea
           rows={3}
           name="content"
-          className="glass-input w-full px-4 py-3 text-slate-700 placeholder:text-slate-400 resize-none"
+          className="glass-input w-full px-4 py-3 text-slate-700 placeholder:text-slate-600 resize-none"
           placeholder="Напиши бележка..."
           required
         />

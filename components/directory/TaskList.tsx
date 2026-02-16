@@ -14,10 +14,23 @@ interface TaskWithAssignees {
   id: number
   title: string
   description: string | null
+  priority: string
   dueDate: Date | null
   isCompleted: boolean
   createdAt: Date
   assignees: TaskAssignee[]
+}
+
+const priorityColors: Record<string, string> = {
+  high: 'bg-red-100 text-red-700 border-red-200',
+  medium: 'bg-amber-100 text-amber-700 border-amber-200',
+  low: 'bg-green-100 text-green-700 border-green-200',
+}
+
+const priorityLabels: Record<string, string> = {
+  high: 'Висока',
+  medium: 'Средна',
+  low: 'Ниска',
 }
 
 interface TaskListProps {
@@ -139,9 +152,14 @@ export default function TaskList({ tasks, personId }: TaskListProps) {
                     <Circle className={`h-6 w-6 flex-shrink-0 mt-0.5 ${overdue ? 'text-red-400' : 'text-amber-400'}`} />
                   )}
                   <div className="flex-1">
-                    <span className={`font-medium block ${task.isCompleted ? 'line-through' : ''}`}>
-                      {task.title}
-                    </span>
+                    <div className="flex items-center gap-2">
+                      <span className={`font-medium block ${task.isCompleted ? 'line-through' : ''}`}>
+                        {task.title}
+                      </span>
+                      <span className={`text-xs px-2 py-0.5 rounded-full border ${priorityColors[task.priority] || priorityColors.medium}`}>
+                        {priorityLabels[task.priority] || 'Средна'}
+                      </span>
+                    </div>
                     {task.assignees.length > 0 && (
                       <div className="flex flex-wrap gap-1 mt-2">
                         {task.assignees.map(a => (
@@ -157,6 +175,7 @@ export default function TaskList({ tasks, personId }: TaskListProps) {
                 <div className="flex items-center gap-3 ml-3">
                   {task.dueDate && (
                     <span className={`text-sm flex items-center gap-1.5 ${overdue ? 'text-red-500 font-medium' : 'text-slate-400'}`}>
+                      {overdue && <span className="w-2 h-2 bg-red-500 rounded-full"></span>}
                       <Calendar className="h-4 w-4" />
                       {formatDate(task.dueDate)}
                     </span>

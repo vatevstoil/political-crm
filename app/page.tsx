@@ -7,6 +7,7 @@ import UpcomingBirthdays from '@/components/dashboard/UpcomingBirthdays'
 import TaskStatsCards from '@/components/dashboard/TaskStatsCards'
 import { OverdueTasks, UpcomingTasks } from '@/components/dashboard/TaskLists'
 import MapVisualization from '@/components/dashboard/MapVisualization'
+import UpcomingEvents from '@/components/dashboard/UpcomingEvents'
 
 export const dynamic = 'force-dynamic'
 
@@ -58,25 +59,26 @@ export default async function DashboardPage() {
         </div>
       </div>
 
-      {/* Charts Section */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          {/* People by City Chart */}
-          <div className="bg-white rounded-lg shadow p-6">
-            <PeopleByCityChart data={stats.byCity} />
+        {/* Charts Section */}
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            {/* People by City Chart */}
+            <div className="bg-white rounded-lg shadow p-6">
+              <PeopleByCityChart data={stats.byCity} />
+            </div>
+
+            {/* Age Structure Chart */}
+            <div className="bg-white rounded-lg shadow p-6">
+              <AgeStructureChart data={stats.byAgeGroup} />
+            </div>
           </div>
 
-          {/* Age Structure Chart */}
-          <div className="bg-white rounded-lg shadow p-6">
-            <AgeStructureChart data={stats.byAgeGroup} />
+          {/* Upcoming Birthdays and Events */}
+          <div className="mt-6 grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <UpcomingBirthdays birthdays={stats.upcomingBirthdays} />
+            <UpcomingEvents events={stats.upcomingEvents} />
           </div>
         </div>
-
-        {/* Upcoming Birthdays */}
-        <div className="mt-6">
-          <UpcomingBirthdays birthdays={stats.upcomingBirthdays} />
-        </div>
-      </div>
     </div>
   )
 }

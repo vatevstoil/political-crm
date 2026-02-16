@@ -1,10 +1,14 @@
 'use client'
 
-import { useEffect, useRef, useState } from 'react'
-import mapboxgl from 'mapbox-gl'
-import 'mapbox-gl/dist/mapbox-gl.css'
+import { useMemo } from 'react'
+import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet'
+import MarkerClusterGroup from 'react-leaflet-cluster'
 import { BULGARIA_CENTER } from '@/lib/geo-data'
 import { MapPin } from 'lucide-react'
+import L from 'leaflet'
+import 'leaflet/dist/leaflet.css'
+import 'leaflet.markercluster/dist/MarkerCluster.css'
+import 'leaflet.markercluster/dist/MarkerCluster.Default.css'
 
 interface MapVisualizationProps {
   geoData: {
@@ -23,191 +27,67 @@ interface MapVisualizationProps {
   }
 }
 
-// Замени с твоя Mapbox token или използвай environment variable
-const MAPBOX_TOKEN = process.env.NEXT_PUBLIC_MAPBOX_TOKEN || ''
+// Създаваме кастомни икони за различните бройки
+const createClusterIcon = (count: number) => {
+  let color = '#14B8A6' // Teal за 1-5
+  let size = 30
+  
+  if (count >= 15) {
+    color = '#8B5CF6' // Purple за 15+
+    size = 50
+  } else if (count >= 5) {
+    color = '#3B82F6' // Blue за 5-15
+    size = 40
+  }
+  
+  return L.divIcon({
+    html: `<div style="
+      background-color: ${color};
+      width: ${size}px;
+      height: ${size}px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: white;
+      font-weight: bold;
+      font-size: 14px;
+      border: 3px solid white;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+    ">${count}</div>`,
+    className: 'custom-cluster-icon',
+    iconSize: L.point(size, size),
+  })
+}
+
+const createMarkerIcon = () => {
+  return L.divIcon({
+    html: `<div style="
+      background-color: #14B8A6;
+      width: 16px;
+      height: 16px;
+      border-radius: 50%;
+      border: 2px solid white;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.3);
+    "></div>`,
+    className: 'custom-marker-icon',
+    iconSize: L.point(16, 16),
+  })
+}
 
 export default function MapVisualization({ geoData }: MapVisualizationProps) {
-  const mapContainer = useRef<HTMLDivElement>(null)
-  const map = useRef<mapboxgl.Map | null>(null)
-  const [selectedCity, setSelectedCity] = useState<string | null>(null)
-  const [loading, setLoading] = useState(true)
-
-  useEffect(() => {
-    if (!mapContainer.current || geoData.features.length === 0) return
-
-    mapboxgl.accessToken = MAPBOX_TOKEN
-
-    map.current = new mapboxgl.Map({
-      container: mapContainer.current,
-      style: 'mapbox://styles/mapbox/light-v11',
-      center: [BULGARIA_CENTER.lng, BULGARIA_CENTER.lat],
-      zoom: 6.5,
-      minZoom: 5,
-      maxZoom: 12,
-    })
-
-    map.current.on('load', () => {
-      if (!map.current) return
-
-      // Добавяме източник с данни
-      map.current.addSource('cities', {
-        type: 'geojson',
-        data: geoData,
-        cluster: true,
-        clusterMaxZoom: 10,
-        clusterRadius: 50,
-      })
-
-      // Клъстерен слой
-      map.current.addLayer({
-        id: 'clusters',
-        type: 'circle',
-        source: 'cities',
-        filter: ['has', 'point_count'],
-        paint: {
-          'circle-color': [
-            'step',
-            ['get', 'point_count'],
-            '#14B8A6', // 1-5 човека
-            5,
-            '#3B82F6', // 5-15 човека
-            15,
-            '#8B5CF6', // 15+ човека
-          ],
-          'circle-radius': [
-            'step',
-            ['get', 'point_count'],
-            25,
-            5,
-            35,
-            15,
-            45,
-          ],
-          'circle-opacity': 0.8,
-          'circle-stroke-width': 3,
-          'circle-stroke-color': '#ffffff',
-        },
-      })
-
-      // Текст на клъстерите
-      map.current.addLayer({
-        id: 'cluster-count',
-        type: 'symbol',
-        source: 'cities',
-        filter: ['has', 'point_count'],
-        layout: {
-          'text-field': '{point_count_abbreviated}',
-          'text-font': ['DIN Offc Pro Medium', 'Arial Unicode MS Bold'],
-          'text-size': 14,
-        },
-        paint: {
-          'text-color': '#ffffff',
-        },
-      })
-
-      // Неклъстерирани точки
-      map.current.addLayer({
-        id: 'unclustered-point',
-        type: 'circle',
-        source: 'cities',
-        filter: ['!', ['has', 'point_count']],
-        paint: {
-          'circle-color': '#14B8A6',
-          'circle-radius': 12,
-          'circle-stroke-width': 2,
-          'circle-stroke-color': '#ffffff',
-        },
-      })
-
-      // Текст на градовете
-      map.current.addLayer({
-        id: 'city-labels',
-        type: 'symbol',
-        source: 'cities',
-        filter: ['!', ['has', 'point_count']],
-        layout: {
-          'text-field': '{city}',
-          'text-font': ['DIN Offc Pro Medium', 'Arial Unicode MS Bold'],
-          'text-size': 12,
-          'text-offset': [0, 1.5],
-        },
-        paint: {
-          'text-color': '#1e293b',
-          'text-halo-color': '#ffffff',
-          'text-halo-width': 2,
-        },
-      })
-
-      setLoading(false)
-    })
-
-    // Event handlers
-    map.current.on('click', 'clusters', (e) => {
-      if (!map.current) return
-      const features = map.current.queryRenderedFeatures(e.point, {
-        layers: ['clusters'],
-      })
-      const clusterId = features[0].properties?.cluster_id
-      const source = map.current.getSource('cities') as mapboxgl.GeoJSONSource
-
-      source.getClusterExpansionZoom(clusterId, (err, zoom) => {
-        if (err || !map.current) return
-        map.current.easeTo({
-          center: (features[0].geometry as any).coordinates,
-          zoom: zoom || 10,
-        })
-      })
-    })
-
-    map.current.on('click', 'unclustered-point', (e) => {
-      if (!e.features || e.features.length === 0) return
-      const feature = e.features[0]
-      const city = feature.properties?.city
-      const count = feature.properties?.count
-
-      setSelectedCity(city)
-
-      // Можем да добавим popup или навигация
-      new mapboxgl.Popup()
-        .setLngLat((feature.geometry as any).coordinates)
-        .setHTML(`
-          <div style="padding: 8px;">
-            <h3 style="margin: 0 0 8px 0; font-weight: bold;">${city}</h3>
-            <p style="margin: 0; color: #666;">${count} човека</p>
-            <a href="/directory?city=${encodeURIComponent(city)}"
-               style="color: #3B82F6; text-decoration: none; font-size: 12px;">
-              Виж всички →
-            </a>
-          </div>
-        `)
-        .addTo(map.current!)
-    })
-
-    map.current.on('mouseenter', 'clusters', () => {
-      if (map.current) map.current.getCanvas().style.cursor = 'pointer'
-    })
-
-    map.current.on('mouseleave', 'clusters', () => {
-      if (map.current) map.current.getCanvas().style.cursor = ''
-    })
-
-    map.current.on('mouseenter', 'unclustered-point', () => {
-      if (map.current) map.current.getCanvas().style.cursor = 'pointer'
-    })
-
-    map.current.on('mouseleave', 'unclustered-point', () => {
-      if (map.current) map.current.getCanvas().style.cursor = ''
-    })
-
-    return () => {
-      map.current?.remove()
-    }
+  const markers = useMemo(() => {
+    return geoData.features.map((feature) => ({
+      position: [feature.geometry.coordinates[1], feature.geometry.coordinates[0]] as [number, number],
+      city: feature.properties.city,
+      count: feature.properties.count,
+    }))
   }, [geoData])
 
-  if (!MAPBOX_TOKEN) {
+  if (markers.length === 0) {
     return (
       <div className="glass-card p-6 text-center">
-        <p className="text-slate-600">Моля, добавете Mapbox token в environment variables</p>
+        <p className="text-slate-600">Няма данни за визуализация на картата</p>
       </div>
     )
   }
@@ -223,7 +103,7 @@ export default function MapVisualization({ geoData }: MapVisualizationProps) {
             <div>
               <h2 className="text-lg font-bold text-slate-900">Географско разпределение</h2>
               <p className="text-sm text-slate-500">
-                {geoData.features.length} града с регистрирани членове
+                {markers.length} града с регистрирани членове
               </p>
             </div>
           </div>
@@ -245,20 +125,49 @@ export default function MapVisualization({ geoData }: MapVisualizationProps) {
       </div>
 
       <div className="relative">
-        <div
-          ref={mapContainer}
-          className="w-full h-[500px]"
-          style={{ minHeight: '500px' }}
-        />
-
-        {loading && (
-          <div className="absolute inset-0 bg-white/80 backdrop-blur-sm flex items-center justify-center">
-            <div className="flex flex-col items-center gap-3">
-              <div className="w-8 h-8 border-4 border-blue-200 border-t-blue-600 rounded-full animate-spin"></div>
-              <p className="text-sm text-slate-600">Зареждане на картата...</p>
-            </div>
-          </div>
-        )}
+        <MapContainer
+          center={[BULGARIA_CENTER.lat, BULGARIA_CENTER.lng]}
+          zoom={7}
+          minZoom={6}
+          maxZoom={12}
+          style={{ height: '500px', width: '100%' }}
+          scrollWheelZoom={true}
+        >
+          <TileLayer
+            attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+            url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+          />
+          
+          <MarkerClusterGroup
+            chunkedLoading
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            iconCreateFunction={(cluster: any) => {
+              const count = cluster.getChildCount()
+              return createClusterIcon(count)
+            }}
+          >
+            {markers.map((marker, index) => (
+              <Marker
+                key={index}
+                position={marker.position}
+                icon={createMarkerIcon()}
+              >
+                <Popup>
+                  <div className="p-2">
+                    <h3 className="font-bold text-slate-900">{marker.city}</h3>
+                    <p className="text-slate-600">{marker.count} човека</p>
+                    <a 
+                      href={`/directory?city=${encodeURIComponent(marker.city)}`}
+                      className="text-blue-600 hover:text-blue-800 text-sm"
+                    >
+                      Виж всички →
+                    </a>
+                  </div>
+                </Popup>
+              </Marker>
+            ))}
+          </MarkerClusterGroup>
+        </MapContainer>
       </div>
 
       <div className="p-4 bg-slate-50 border-t border-slate-100">

@@ -1,0 +1,164 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+// 1. People (Основно Досие)
+model Person {
+  id                 Int      @id @default(autoincrement())
+  membershipCardId   String?  @unique @map("membership_card_id")
+  fullName           String   @map("full_name")
+  photoUrl           String?  @map("photo_url")
+  
+  // Контакти
+  phone              String?
+  email              String?
+  socialFb           String?  @map("social_fb")
+  socialInstagram    String?  @map("social_instagram")
+  socialLinkedin     String?  @map("social_linkedin")
+  
+  // Локация
+  city               String?
+  address            String?
+  region             String?
+  votingSection      String?  @map("voting_section")
+  
+  // Демография
+  birthDate          DateTime? @map("birth_date")
+  gender             String?   // Male, Female, Other
+  profession         String?
+  skills             String?   // SQLite doesn't support arrays natively, will store as JSON string or comma-separated
+  
+  // Политически статус
+  status             String?   // Active, Inactive, Excluded
+  role               String?   // Supporter, Member, Volunteer...
+  joinDate           DateTime  @default(now()) @map("join_date")
+  
+  // Допълнителни полета
+  votingMobile       String?   @map("voting_mobile")   // Мобилен номер за гласуване
+  pensioner          Boolean   @default(false)         // Пенсионер
+  disability         String?   @map("disability")      // Вид увреждане
+  employer           String?   @map("employer")        // Работодател
+  university         String?   @map("university")      // Университет
+  specialty          String?   @map("specialty")       // Специалност
+  
+  // Relations
+  notes              Note[]
+  tags               PersonTag[]
+  tasks              Task[]
+  taskAssignments    TaskAssignee[]
+  groupMemberships   GroupMember[]
+  
+  createdAt          DateTime  @default(now()) @map("created_at")
+  updatedAt          DateTime  @updatedAt @map("updated_at")
+
+  @@map("people")
+  @@index([fullName])
+  @@index([membershipCardId])
+  @@index([phone])
+  @@index([city])
+}
+
+// 2. Notes (Бележки)
+model Note {
+  id        Int      @id @default(autoincrement())
+  content   String
+  createdAt DateTime @default(now()) @map("created_at")
+  
+  personId  Int      @map("person_id")
+  person    Person   @relation(fields: [personId], references: [id], onDelete: Cascade)
+  
+  authorId  Int?     @map("author_id") // Placeholder for future User model
+
+  @@map("notes")
+}
+
+// 3. Tags (Категории)
+model Tag {
+  id      Int         @id @default(autoincrement())
+  tagName String      @unique @map("tag_name")
+  color   String      @default("#000000")
+  
+  people  PersonTag[]
+
+  @@map("tags")
+}
+
+// Many-to-Many via implicit or explicit table. Explicit allows extra fields if needed.
+model PersonTag {
+  personId Int    @map("person_id")
+  tagId    Int    @map("tag_id")
+  
+  person   Person @relation(fields: [personId], references: [id], onDelete: Cascade)
+  tag      Tag    @relation(fields: [tagId], references: [id], onDelete: Cascade)
+
+  @@id([personId, tagId])
+  @@map("person_tags")
+}
+
+// 4. Events & Tasks
+model Event {
+  id          Int      @id @default(autoincrement())
+  title       String
+  description String?
+  startTime   DateTime @map("start_time")
+  endTime     DateTime? @map("end_time")
+  location    String?
+  createdAt   DateTime @default(now()) @map("created_at")
+
+  @@map("events")
+}
+
+model Task {
+  id           Int       @id @default(autoincrement())
+  title        String
+  description  String?
+  priority     String    @default("medium")
+  assignedToId Int?      @map("assigned_to_id")
+  person       Person?   @relation(fields: [assignedToId], references: [id])
+  
+  dueDate      DateTime? @map("due_date")
+  isCompleted  Boolean   @default(false) @map("is_completed")
+  createdAt    DateTime  @default(now()) @map("created_at")
+
+  assignees    TaskAssignee[]
+
+  @@map("tasks")
+}
+
+model TaskAssignee {
+  taskId     Int      @map("task_id")
+  personId   Int      @map("person_id")
+  task       Task     @relation(fields: [taskId], references: [id], onDelete: Cascade)
+  person     Person   @relation(fields: [personId], references: [id], onDelete: Cascade)
+
+  @@id([taskId, personId])
+  @@map("task_assignees")
+}
+
+// 5. Groups (Групи - за гъвкаво групиране по всяко поле)
+model Group {
+  id          Int       @id @default(autoincrement())
+  name        String    @unique
+  color       String    @default("#3B82F6")
+  description String?
+  createdAt   DateTime  @default(now()) @map("created_at")
+
+  members     GroupMember[]
+
+  @@map("groups")
+}
+
+model GroupMember {
+  groupId   Int      @map("group_id")
+  personId  Int      @map("person_id")
+  group     Group    @relation(fields: [groupId], references: [id], onDelete: Cascade)
+  person    Person   @relation(fields: [personId], references: [id], onDelete: Cascade)
+
+  @@id([groupId, personId])
+  @@map("group_members")
+}
