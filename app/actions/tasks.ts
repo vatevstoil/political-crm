@@ -1,22 +1,24 @@
 'use server'
 
-import { z } from 'zod'
 import { prisma } from '@/lib/prisma'
+import { Prisma } from '@prisma/client'
 import { revalidatePath } from 'next/cache'
+import { z } from 'zod'
 
-const TaskSchema = z.object({
-  title: z.string().min(1, 'Заглавието е задължително'),
-  description: z.string().optional(),
-  assignedToId: z.number().int().positive().optional(),
-  assigneeIds: z.array(z.number()).optional(),
-  dueDate: z.string().optional(),
-  priority: z.enum(['low', 'medium', 'high']).optional(),
+const IdSchema = z.number().int().positive('Невалиден идентификатор')
+
+const CreateTaskSchema = z.object({
+  title: z.string().min(1, 'Заглавието е задължително').max(200),
+  dueDate: z.string().optional().or(z.literal('')),
+  priority: z.enum(['low', 'medium', 'high']).default('medium'),
+  assigneeIds: z.array(z.number().int().positive()).optional(),
 })
 
 export type CreateTaskState = {
   errors?: {
     title?: string[]
-    description?: string[]
+    priority?: string[]
+    _form?: string[]
   }
   message?: string | null
 }
@@ -26,38 +28,34 @@ export async function createTask(
   prevState: CreateTaskState,
   formData: FormData
 ): Promise<CreateTaskState> {
-  const assigneeIds = formData.getAll('assigneeIds').map(id => parseInt(id as string)).filter(id => !isNaN(id))
-  const assignedToId = formData.get('assignedToId') ? parseInt(formData.get('assignedToId') as string) : undefined
-
-  const validatedFields = TaskSchema.safeParse({
+  const validatedFields = CreateTaskSchema.safeParse({
     title: formData.get('title'),
-    description: formData.get('description'),
-    assignedToId,
-    assigneeIds: assigneeIds.length > 0 ? assigneeIds : undefined,
-    dueDate: formData.get('dueDate'),
+    dueDate: formData.get('dueDate') || undefined,
+    priority: formData.get('priority') || 'medium',
+    assigneeIds: formData.getAll('assigneeIds').map(id => parseInt(id as string)).filter(id => !isNaN(id)),
   })
-
+  
   if (!validatedFields.success) {
     return {
       errors: validatedFields.error.flatten().fieldErrors,
-      message: 'Моля, поправете грешките.',
+      message: 'Моля, поправете грешките във формата.',
     }
   }
-
-  const { title, description, assignedToId: singleAssignee, assigneeIds: multipleAssignees, dueDate, priority } = validatedFields.data
+  
+  const { title, dueDate, priority, assigneeIds } = validatedFields.data
 
   try {
-    const allAssignees = multipleAssignees || (singleAssignee ? [singleAssignee] : [])
-
     await prisma.task.create({
       data: {
         title,
-        description: description || null,
-        assignedToId: singleAssignee || null,
+        description: null,
+        assignedToId: personId,
         dueDate: dueDate ? new Date(dueDate) : null,
-        priority: priority || 'medium',
+        priority: priority,
         assignees: {
-          create: allAssignees.map(personId => ({ personId }))
+          create: assigneeIds && assigneeIds.length > 0 
+            ? assigneeIds.map(pid => ({ personId: pid }))
+            : [{ personId }]
         }
       },
     })
@@ -73,11 +71,17 @@ export async function createTask(
 }
 
 export async function toggleTask(taskId: number, personId: number) {
+  const parsedTask = IdSchema.safeParse(taskId)
+  const parsedPerson = IdSchema.safeParse(personId)
+  if (!parsedTask.success || !parsedPerson.success) {
+    throw new Error('Невалидни параметри.')
+  }
+
   try {
     const task = await prisma.task.findUnique({
       where: { id: taskId },
     })
-    
+
     if (!task) {
       throw new Error('Задачата не е намерена')
     }
@@ -91,11 +95,17 @@ export async function toggleTask(taskId: number, personId: number) {
     return { message: 'Задачата е обновена.' }
   } catch (error) {
     console.error('Failed to toggle task:', error)
-    throw new Error('Failed to toggle task.')
+    throw new Error('Грешка при обновяване на задачата.')
   }
 }
 
 export async function deleteTask(taskId: number, personId: number) {
+  const parsedTask = IdSchema.safeParse(taskId)
+  const parsedPerson = IdSchema.safeParse(personId)
+  if (!parsedTask.success || !parsedPerson.success) {
+    throw new Error('Невалидни параметри.')
+  }
+
   try {
     await prisma.task.delete({
       where: { id: taskId },
@@ -104,7 +114,7 @@ export async function deleteTask(taskId: number, personId: number) {
     return { message: 'Задачата е изтрита.' }
   } catch (error) {
     console.error('Failed to delete task:', error)
-    throw new Error('Failed to delete task.')
+    throw new Error('Грешка при изтриване на задачата.')
   }
 }
 
@@ -129,27 +139,10 @@ export async function getTasks(personId: number) {
     return tasks
   } catch (error) {
     console.error('Failed to fetch tasks:', error)
-    throw new Error('Failed to fetch tasks.')
+    throw new Error('Грешка при зареждане на задачите.')
   }
 }
 
-export async function getAllPeople() {
-  try {
-    const people = await prisma.person.findMany({
-      orderBy: { fullName: 'asc' },
-      select: {
-        id: true,
-        fullName: true,
-        role: true,
-        city: true,
-      }
-    })
-    return people
-  } catch (error) {
-    console.error('Failed to fetch people:', error)
-    throw new Error('Failed to fetch people.')
-  }
-}
 
 export type TaskFilters = {
   status?: 'completed' | 'pending'
@@ -175,7 +168,7 @@ export type TaskWithAssignees = {
 
 export async function getTasksForDashboard(filters?: TaskFilters): Promise<TaskWithAssignees[]> {
   try {
-    const where: any = {}
+    const where: Prisma.TaskWhereInput = {}
 
     if (filters?.status === 'completed') {
       where.isCompleted = true
@@ -210,7 +203,7 @@ export async function getTasksForDashboard(filters?: TaskFilters): Promise<TaskW
     return tasks
   } catch (error) {
     console.error('Failed to fetch tasks:', error)
-    throw new Error('Failed to fetch tasks.')
+    throw new Error('Грешка при зареждане на задачите.')
   }
 }
 
@@ -254,7 +247,7 @@ export async function getTaskStats(): Promise<TaskStats> {
     }
   } catch (error) {
     console.error('Failed to fetch task stats:', error)
-    throw new Error('Failed to fetch task stats.')
+    throw new Error('Грешка при зареждане на статистиката.')
   }
 }
 
@@ -281,7 +274,7 @@ export async function getOverdueTasks(): Promise<TaskWithAssignees[]> {
     return tasks
   } catch (error) {
     console.error('Failed to fetch overdue tasks:', error)
-    throw new Error('Failed to fetch overdue tasks.')
+    throw new Error('Грешка при зареждане на просрочените задачи.')
   }
 }
 
@@ -312,6 +305,6 @@ export async function getTasksDueSoon(days: number = 7): Promise<TaskWithAssigne
     return tasks
   } catch (error) {
     console.error('Failed to fetch tasks due soon:', error)
-    throw new Error('Failed to fetch tasks due soon.')
+    throw new Error('Грешка при зареждане на предстоящите задачи.')
   }
 }

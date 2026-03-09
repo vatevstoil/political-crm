@@ -35,14 +35,14 @@ export default function StatsCards({ totalMembers, newThisMonth, activeMembers }
       {cards.map((card) => (
         <div
           key={card.title}
-          className="bg-white rounded-lg shadow p-5 flex items-center"
+          className="bg-white dark:bg-slate-800 rounded-lg shadow dark:shadow-slate-900/50 p-5 flex items-center border border-transparent dark:border-slate-700"
         >
           <div className={`${card.color} p-3 rounded-lg`}>
             <card.icon className="h-6 w-6 text-white" />
           </div>
           <div className="ml-4">
-            <p className="text-sm font-medium text-gray-500">{card.title}</p>
-            <p className="text-2xl font-semibold text-gray-900">{card.value}</p>
+            <p className="text-sm font-semibold text-slate-600 dark:text-slate-400 leading-relaxed">{card.title}</p>
+            <p className="text-[28px] font-semibold text-slate-900 dark:text-slate-100 leading-tight tracking-[-0.01em]">{card.value}</p>
           </div>
         </div>
       ))}

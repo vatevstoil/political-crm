@@ -2,10 +2,11 @@
 
 import { z } from 'zod'
 import { prisma } from '@/lib/prisma'
-import { revalidatePath } from 'next/cache'
+
+const IdSchema = z.number().int().positive('Невалиден идентификатор')
 
 const NoteSchema = z.object({
-  content: z.string().min(1, 'Please enter a note'),
+  content: z.string().min(1, 'Моля, въведете бележка'),
   personId: z.number().int().positive(),
 })
 
@@ -30,7 +31,7 @@ export async function createNote(
   if (!validatedFields.success) {
     return {
       errors: validatedFields.error.flatten().fieldErrors,
-      message: 'Missing Fields. Failed to Create Note.',
+      message: 'Липсващи полета. Неуспешно създаване на бележка.',
     }
   }
 
@@ -45,15 +46,17 @@ export async function createNote(
     })
   } catch {
     return {
-      message: 'Database Error: Failed to Create Note.',
+      message: 'Грешка в базата данни при създаване на бележка.',
     }
   }
 
-  revalidatePath(`/directory/${personId}`)
-  return { message: 'Note created successfully.' }
+  return { message: 'Бележката е създадена успешно.' }
 }
 
 export async function getNotes(personId: number) {
+    const parsed = IdSchema.safeParse(personId)
+    if (!parsed.success) return []
+
     try {
         const notes = await prisma.note.findMany({
             where: { personId },
@@ -62,19 +65,44 @@ export async function getNotes(personId: number) {
         return notes
     } catch (error) {
         console.error('Failed to fetch notes:', error)
-        throw new Error('Failed to fetch notes.')
+        throw new Error('Грешка при зареждане на бележките.')
+    }
+}
+
+export async function updateNote(noteId: number, personId: number, content: string) {
+    const parsedNote = IdSchema.safeParse(noteId)
+    const parsedPerson = IdSchema.safeParse(personId)
+    const parsedContent = z.string().min(1, 'Моля, въведете бележка').safeParse(content)
+    if (!parsedNote.success || !parsedPerson.success || !parsedContent.success) {
+      return { success: false, error: 'Невалидни параметри.' }
+    }
+
+    try {
+        await prisma.note.update({
+            where: { id: noteId },
+            data: { content: parsedContent.data },
+        })
+        return { success: true }
+    } catch (error) {
+        console.error('Failed to update note:', error)
+        return { success: false, error: 'Грешка при обновяване на бележката.' }
     }
 }
 
 export async function deleteNote(noteId: number, personId: number) {
+    const parsedNote = IdSchema.safeParse(noteId)
+    const parsedPerson = IdSchema.safeParse(personId)
+    if (!parsedNote.success || !parsedPerson.success) {
+      throw new Error('Невалидни параметри.')
+    }
+
     try {
         await prisma.note.delete({
             where: { id: noteId },
         })
-        revalidatePath(`/directory/${personId}`)
-        return { message: 'Note deleted successfully.' }
+        return { message: 'Бележката е изтрита успешно.' }
     } catch (error) {
         console.error('Failed to delete note:', error)
-        throw new Error('Failed to delete note.')
+        throw new Error('Грешка при изтриване на бележката.')
     }
 }

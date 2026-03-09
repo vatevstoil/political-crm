@@ -1,0 +1,148 @@
+
+> political-crm@0.1.0 lint
+> eslint
+
+
+J:\Antigraviti\Organization\political-crm\app\actions\tasks.ts
+    7:7   warning  'TaskSchema' is assigned a value but never used  @typescript-eslint/no-unused-vars
+  164:18  error    Unexpected any. Specify a different type         @typescript-eslint/no-explicit-any
+
+J:\Antigraviti\Organization\political-crm\app\api\people\[id]\route.ts
+  18:38  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+J:\Antigraviti\Organization\political-crm\app\directory\[id]\PersonPageClient.tsx
+    4:10   warning  'prisma' is defined but never used                 @typescript-eslint/no-unused-vars
+   55:38   error    Unexpected any. Specify a different type           @typescript-eslint/no-explicit-any
+   56:38   error    Unexpected any. Specify a different type           @typescript-eslint/no-explicit-any
+  169:9    warning  'DisplayField' is assigned a value but never used  @typescript-eslint/no-unused-vars
+  169:113  error    Unexpected any. Specify a different type           @typescript-eslint/no-explicit-any
+
+J:\Antigraviti\Organization\political-crm\app\directory\page.tsx
+  3:8  warning  'FilterBar' is defined but never used  @typescript-eslint/no-unused-vars
+
+J:\Antigraviti\Organization\political-crm\app\events\page.tsx
+  25:5  error    Error: Calling setState synchronously within an effect can trigger cascading renders
+
+Effects are intended to synchronize state between React and external systems such as manually updating the DOM, state management libraries, or other platform APIs. In general, the body of an effect should do one or both of the following:
+* Update external systems with the latest state from React.
+* Subscribe for updates from some external system, calling setState in a callback function when external state changes.
+
+Calling setState synchronously within an effect body causes cascading renders that can hurt performance, and is not recommended. (https://react.dev/learn/you-might-not-need-an-effect).
+
+J:\Antigraviti\Organization\political-crm\app\events\page.tsx:25:5
+  23 |
+  24 |   useEffect(() => {
+> 25 |     loadEvents()
+     |     ^^^^^^^^^^ Avoid calling setState() directly within an effect
+  26 |   }, [])
+  27 |
+  28 |   const resetForm = () => {  react-hooks/set-state-in-effect
+  26:6  warning  React Hook useEffect has a missing dependency: 'loadEvents'. Either include it or remove the dependency array                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                       react-hooks/exhaustive-deps
+
+J:\Antigraviti\Organization\political-crm\app\groups\page.tsx
+  14:84   warning  'ArrowUpDown' is defined but never used                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     @typescript-eslint/no-unused-vars
+  14:102  warning  'MessageCircle' is defined but never used                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   @typescript-eslint/no-unused-vars
+  69:5    error    Error: Cannot access variable before it is declared
+
+`loadGroups` is accessed before it is declared, which prevents the earlier access from updating when this value changes over time.
+
+J:\Antigraviti\Organization\political-crm\app\groups\page.tsx:69:5
+  67 |
+  68 |   useEffect(() => {
+> 69 |     loadGroups()
+     |     ^^^^^^^^^^ `loadGroups` accessed before it is declared
+  70 |     loadAllPeople()
+  71 |   }, [])
+  72 |
+
+J:\Antigraviti\Organization\political-crm\app\groups\page.tsx:73:3
+  71 |   }, [])
+  72 |
+> 73 |   const loadGroups = async () => {
+     |   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 74 |     const data = await getGroups()
+     | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 75 |     setGroups(data)
+     | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 76 |   }
+     | ^^^^ `loadGroups` is declared here
+  77 |
+  78 |   const loadAllPeople = async () => {
+  79 |     const data = await getAllPeople()                                                                                     react-hooks/immutability
+  70:5    error    Error: Cannot access variable before it is declared
+
+`loadAllPeople` is accessed before it is declared, which prevents the earlier access from updating when this value changes over time.
+
+J:\Antigraviti\Organization\political-crm\app\groups\page.tsx:70:5
+  68 |   useEffect(() => {
+  69 |     loadGroups()
+> 70 |     loadAllPeople()
+     |     ^^^^^^^^^^^^^ `loadAllPeople` accessed before it is declared
+  71 |   }, [])
+  72 |
+  73 |   const loadGroups = async () => {
+
+J:\Antigraviti\Organization\political-crm\app\groups\page.tsx:78:3
+  76 |   }
+  77 |
+> 78 |   const loadAllPeople = async () => {
+     |   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 79 |     const data = await getAllPeople()
+     | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 80 |     setAllPeople(data)
+     | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 81 |   }
+     | ^^^^ `loadAllPeople` is declared here
+  82 |
+  83 |   const loadMembers = async (groupId: number) => {
+  84 |     const data = await getGroupMembers(groupId)  react-hooks/immutability
+
+J:\Antigraviti\Organization\political-crm\components\dashboard\PeopleByCityChart.tsx
+  25:43  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  25:58  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  66:28  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+J:\Antigraviti\Organization\political-crm\components\dashboard\UpcomingEvents.tsx
+  4:20  warning  'Clock' is defined but never used  @typescript-eslint/no-unused-vars
+
+J:\Antigraviti\Organization\political-crm\components\directory\DirectoryClient.tsx
+  36:21  warning  'startTransition' is assigned a value but never used  @typescript-eslint/no-unused-vars
+
+J:\Antigraviti\Organization\political-crm\components\directory\DirectoryGrid.tsx
+  6:29  warning  'UserX' is defined but never used  @typescript-eslint/no-unused-vars
+  6:60  warning  'Send' is defined but never used   @typescript-eslint/no-unused-vars
+
+J:\Antigraviti\Organization\political-crm\components\directory\EditableField.tsx
+  71:34  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+J:\Antigraviti\Organization\political-crm\components\directory\FilterBar.tsx
+  41:9  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+J:\Antigraviti\Organization\political-crm\components\layout\ThemeToggle.tsx
+  12:7  error  Error: Calling setState synchronously within an effect can trigger cascading renders
+
+Effects are intended to synchronize state between React and external systems such as manually updating the DOM, state management libraries, or other platform APIs. In general, the body of an effect should do one or both of the following:
+* Update external systems with the latest state from React.
+* Subscribe for updates from some external system, calling setState in a callback function when external state changes.
+
+Calling setState synchronously within an effect body causes cascading renders that can hurt performance, and is not recommended. (https://react.dev/learn/you-might-not-need-an-effect).
+
+J:\Antigraviti\Organization\political-crm\components\layout\ThemeToggle.tsx:12:7
+  10 |     const saved = localStorage.getItem('theme')
+  11 |     if (saved === 'dark') {
+> 12 |       setIsDark(true)
+     |       ^^^^^^^^^ Avoid calling setState() directly within an effect
+  13 |       document.documentElement.classList.add('dark')
+  14 |     } else if (!saved && window.matchMedia('(prefers-color-scheme: dark)').matches) {
+  15 |       setIsDark(true)  react-hooks/set-state-in-effect
+
+J:\Antigraviti\Organization\political-crm\cypress.config.ts
+  6:21  warning  'on' is defined but never used      @typescript-eslint/no-unused-vars
+  6:25  warning  'config' is defined but never used  @typescript-eslint/no-unused-vars
+
+J:\Antigraviti\Organization\political-crm\prisma\seed.mjs
+  24:9  warning  'person1' is assigned a value but never used  @typescript-eslint/no-unused-vars
+  50:9  warning  'person2' is assigned a value but never used  @typescript-eslint/no-unused-vars
+
+тЬЦ 29 problems (14 errors, 15 warnings)
+

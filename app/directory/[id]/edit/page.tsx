@@ -26,16 +26,16 @@ export default async function EditPersonPage({ params }: EditPersonPageProps) {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 py-8">
+    <div className="min-h-screen bg-gray-50 dark:bg-slate-900 py-8">
       <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="mb-6">
-          <h1 className="text-2xl font-bold text-gray-900">Редактиране на профил</h1>
-          <p className="mt-1 text-sm text-gray-500">
+          <h1 className="text-2xl font-bold text-gray-900 dark:text-slate-100">Редактиране на профил</h1>
+          <p className="mt-1 text-sm text-gray-500 dark:text-slate-400">
              Променете данните за {person.fullName}.
           </p>
         </div>
         
-        <PersonForm initialData={person} />
+        <PersonForm initialData={person} backHref={`/directory/${personId}`} />
       </div>
     </div>
   )

@@ -3,6 +3,7 @@
 import { z } from 'zod'
 import { prisma } from '@/lib/prisma'
 import { revalidatePath } from 'next/cache'
+import { ActionResult } from '@/app/actions/shared/types'
 
 const GroupSchema = z.object({
   name: z.string().min(1, 'Името е задължително'),
@@ -34,6 +35,7 @@ export type GroupMemberWithPerson = {
     photoUrl: string | null
     status: string | null
     profession: string | null
+    telegram: string | null
   }
 }
 
@@ -50,7 +52,7 @@ export async function getGroups(): Promise<GroupWithMemberCount[]> {
     return groups
   } catch (error) {
     console.error('Failed to fetch groups:', error)
-    throw new Error('Failed to fetch groups.')
+    throw new Error('Грешка при зареждане на групите.')
   }
 }
 
@@ -58,7 +60,7 @@ export async function createGroup(
   name: string,
   color: string,
   description?: string
-) {
+): Promise<ActionResult> {
   const validatedFields = GroupSchema.safeParse({
     name,
     color,
@@ -66,7 +68,7 @@ export async function createGroup(
   })
 
   if (!validatedFields.success) {
-    throw new Error(validatedFields.error.issues[0].message)
+    return { success: false, error: validatedFields.error.issues[0].message }
   }
 
   try {
@@ -79,11 +81,12 @@ export async function createGroup(
     })
   } catch (error) {
     console.error('Database Error:', error)
-    throw new Error('Възникна грешка при създаването на групата.')
+    return { success: false, error: 'Грешка при създаване на групата.' }
   }
 
   revalidatePath('/groups')
   revalidatePath('/directory')
+  return { success: true }
 }
 
 export async function updateGroup(
@@ -91,7 +94,7 @@ export async function updateGroup(
   name: string,
   color: string,
   description?: string
-) {
+): Promise<ActionResult> {
   const validatedFields = GroupSchema.safeParse({
     name,
     color,
@@ -99,7 +102,7 @@ export async function updateGroup(
   })
 
   if (!validatedFields.success) {
-    throw new Error(validatedFields.error.issues[0].message)
+    return { success: false, error: validatedFields.error.issues[0].message }
   }
 
   try {
@@ -113,25 +116,27 @@ export async function updateGroup(
     })
   } catch (error) {
     console.error('Database Error:', error)
-    throw new Error('Възникна грешка при обновяването на групата.')
+    return { success: false, error: 'Грешка при обновяване на групата.' }
   }
 
   revalidatePath('/groups')
   revalidatePath('/directory')
+  return { success: true }
 }
 
-export async function deleteGroup(id: number) {
+export async function deleteGroup(id: number): Promise<ActionResult> {
   try {
     await prisma.group.delete({
       where: { id },
     })
   } catch (error) {
     console.error('Failed to delete group:', error)
-    throw new Error('Възникна грешка при изтриването.')
+    return { success: false, error: 'Грешка при изтриване на групата.' }
   }
 
   revalidatePath('/groups')
   revalidatePath('/directory')
+  return { success: true }
 }
 
 export async function getGroupMembers(groupId: number): Promise<GroupMemberWithPerson[]> {
@@ -150,6 +155,7 @@ export async function getGroupMembers(groupId: number): Promise<GroupMemberWithP
             photoUrl: true,
             status: true,
             profession: true,
+            telegram: true,
           },
         },
       },
@@ -162,27 +168,64 @@ export async function getGroupMembers(groupId: number): Promise<GroupMemberWithP
     return members
   } catch (error) {
     console.error('Failed to fetch group members:', error)
-    throw new Error('Failed to fetch group members.')
+    throw new Error('Грешка при зареждане на членовете.')
   }
 }
 
-export async function addMemberToGroup(groupId: number, personId: number) {
+export async function addMemberToGroup(groupId: number, personId: number): Promise<ActionResult> {
+  const parsedGroupId = z.number().int().positive().safeParse(groupId)
+  const parsedPersonId = z.number().int().positive().safeParse(personId)
+  if (!parsedGroupId.success || !parsedPersonId.success) {
+    return { success: false, error: 'Невалидни параметри за група или лице.' }
+  }
+
   try {
-    await prisma.groupMember.create({
-      data: {
+    await prisma.groupMember.upsert({
+      where: {
+        groupId_personId: { groupId, personId }
+      },
+      update: {},
+      create: {
         groupId,
         personId,
       },
     })
   } catch (error) {
     console.error('Failed to add member to group:', error)
-    throw new Error('Възникна грешка при добавянето на член в групата.')
+    return { success: false, error: 'Грешка при добавяне на член в групата.' }
   }
 
   revalidatePath('/groups')
+  return { success: true }
 }
 
-export async function removeMemberFromGroup(groupId: number, personId: number) {
+export async function addMembersToGroup(groupId: number, personIds: number[]): Promise<ActionResult> {
+  try {
+    await Promise.all(
+      personIds.map(personId =>
+        prisma.groupMember.upsert({
+          where: {
+            groupId_personId: { groupId, personId }
+          },
+          create: {
+            groupId,
+            personId,
+          },
+          update: {},
+        })
+      )
+    )
+  } catch (error) {
+    console.error('Failed to add members to group:', error)
+    return { success: false, error: 'Грешка при добавяне на членове в групата.' }
+  }
+
+  revalidatePath('/groups')
+  revalidatePath('/directory')
+  return { success: true }
+}
+
+export async function removeMemberFromGroup(groupId: number, personId: number): Promise<ActionResult> {
   try {
     await prisma.groupMember.delete({
       where: {
@@ -194,10 +237,11 @@ export async function removeMemberFromGroup(groupId: number, personId: number) {
     })
   } catch (error) {
     console.error('Failed to remove member from group:', error)
-    throw new Error('Възникна грешка при премахването на член от групата.')
+    return { success: false, error: 'Грешка при премахване на член от групата.' }
   }
 
   revalidatePath('/groups')
+  return { success: true }
 }
 
 export async function getPersonGroups(personId: number) {
@@ -211,29 +255,7 @@ export async function getPersonGroups(personId: number) {
     return memberships.map(m => m.group)
   } catch (error) {
     console.error('Failed to fetch person groups:', error)
-    throw new Error('Failed to fetch person groups.')
+    throw new Error('Грешка при зареждане на групите на лицето.')
   }
 }
 
-export async function getAllPeople() {
-  try {
-    const people = await prisma.person.findMany({
-      orderBy: { fullName: 'asc' },
-      select: {
-        id: true,
-        fullName: true,
-        role: true,
-        city: true,
-        phone: true,
-        email: true,
-        photoUrl: true,
-        status: true,
-        profession: true,
-      },
-    })
-    return people
-  } catch (error) {
-    console.error('Failed to fetch people:', error)
-    throw new Error('Failed to fetch people.')
-  }
-}

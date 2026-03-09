@@ -1,7 +1,7 @@
 'use server'
 
 import { prisma } from '@/lib/prisma'
-import { Prisma } from '@prisma/client'
+import { buildPersonWhereClause } from '@/app/actions/shared/personFilters'
 
 export type ExportPeopleParams = {
   query?: string
@@ -28,34 +28,7 @@ function formatDate(date: Date | null | undefined): string {
 }
 
 export async function exportPeopleToCSV(filters: ExportPeopleParams): Promise<string> {
-  const where: Prisma.PersonWhereInput = {
-    AND: [
-      filters.query
-        ? {
-            OR: [
-              { fullName: { contains: filters.query } },
-              { membershipCardId: { contains: filters.query } },
-              { phone: { contains: filters.query } },
-              { email: { contains: filters.query } },
-              { city: { contains: filters.query } },
-              { address: { contains: filters.query } },
-              { region: { contains: filters.query } },
-              { profession: { contains: filters.query } },
-              { skills: { contains: filters.query } },
-              { employer: { contains: filters.query } },
-              { university: { contains: filters.query } },
-              { specialty: { contains: filters.query } },
-            ],
-          }
-        : {},
-      filters.role ? { role: { contains: filters.role } } : {},
-      filters.city ? { city: { contains: filters.city } } : {},
-      filters.status ? { status: { contains: filters.status } } : {},
-      filters.profession ? { profession: { contains: filters.profession } } : {},
-      filters.gender ? { gender: { contains: filters.gender } } : {},
-      filters.groupId ? { groupMemberships: { some: { groupId: parseInt(filters.groupId) } } } : {},
-    ],
-  }
+  const where = await buildPersonWhereClause(filters)
 
   const people = await prisma.person.findMany({
     where,
@@ -106,7 +79,7 @@ export async function exportPeopleToCSV(filters: ExportPeopleParams): Promise<st
     escapeCSV(person.employer),
     escapeCSV(person.skills),
     escapeCSV(person.gender),
-    formatDate(person.birthDate),
+    escapeCSV(formatDate(person.birthDate)),
     escapeCSV(person.pensioner ? 'Да' : 'Не'),
     escapeCSV(person.disability),
     escapeCSV(person.membershipCardId),
@@ -117,7 +90,7 @@ export async function exportPeopleToCSV(filters: ExportPeopleParams): Promise<st
     escapeCSV(person.socialLinkedin),
     escapeCSV(person.votingMobile),
     escapeCSV(person.photoUrl),
-    formatDate(person.createdAt),
+    escapeCSV(formatDate(person.createdAt)),
   ])
 
   const csvContent = [

@@ -16,7 +16,8 @@ model Person {
   
   // Контакти
   phone              String?
-  email              String?
+  email              String?  @unique
+  telegram           String?   // Telegram username or chat ID
   socialFb           String?  @map("social_fb")
   socialInstagram    String?  @map("social_instagram")
   socialLinkedin     String?  @map("social_linkedin")
@@ -26,8 +27,11 @@ model Person {
   address            String?
   region             String?
   votingSection      String?  @map("voting_section")
+  isRepresentative   Boolean  @default(false) @map("is_representative") // Застъпник в секция
+  isCommissionMember Boolean  @default(false) @map("is_commission_member") // Член на секционна комисия
   
   // Демография
+  egn                String?   @unique // ЕГН (Единен граждански номер) — 10 digits
   birthDate          DateTime? @map("birth_date")
   gender             String?   // Male, Female, Other
   profession         String?
@@ -48,10 +52,17 @@ model Person {
   
   // Relations
   notes              Note[]
+  activityLogs       ActivityLog[]
   tags               PersonTag[]
   tasks              Task[]
   taskAssignments    TaskAssignee[]
+  campaignMemberships CampaignMember[]
   groupMemberships   GroupMember[]
+  eventAttendances   EventAttendance[]
+  reminders          Reminder[]
+  relationsFrom      PersonRelation[] @relation("PersonRelationsFrom")
+  relationsTo        PersonRelation[] @relation("PersonRelationsTo")
+  changeLogs         ChangeLog[]
   
   createdAt          DateTime  @default(now()) @map("created_at")
   updatedAt          DateTime  @updatedAt @map("updated_at")
@@ -61,6 +72,9 @@ model Person {
   @@index([membershipCardId])
   @@index([phone])
   @@index([city])
+  @@index([status])
+  @@index([role])
+  @@index([createdAt])
 }
 
 // 2. Notes (Бележки)
@@ -75,6 +89,7 @@ model Note {
   authorId  Int?     @map("author_id") // Placeholder for future User model
 
   @@map("notes")
+  @@index([personId])
 }
 
 // 3. Tags (Категории)
@@ -110,7 +125,22 @@ model Event {
   location    String?
   createdAt   DateTime @default(now()) @map("created_at")
 
+  attendees   EventAttendance[]
+
   @@map("events")
+  @@index([startTime])
+}
+
+model EventAttendance {
+  eventId    Int      @map("event_id")
+  personId   Int      @map("person_id")
+  status     String   @default("invited") // invited, confirmed, attended, absent
+  event      Event    @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  person     Person   @relation(fields: [personId], references: [id], onDelete: Cascade)
+
+  @@id([eventId, personId])
+  @@map("event_attendances")
+  @@index([personId])
 }
 
 model Task {
@@ -119,15 +149,22 @@ model Task {
   description  String?
   priority     String    @default("medium")
   assignedToId Int?      @map("assigned_to_id")
-  person       Person?   @relation(fields: [assignedToId], references: [id])
+  person       Person?   @relation(fields: [assignedToId], references: [id], onDelete: SetNull)
   
   dueDate      DateTime? @map("due_date")
   isCompleted  Boolean   @default(false) @map("is_completed")
   createdAt    DateTime  @default(now()) @map("created_at")
 
+  campaignId   Int?      @map("campaign_id")
+  campaign     Campaign? @relation(fields: [campaignId], references: [id], onDelete: SetNull)
+
   assignees    TaskAssignee[]
 
   @@map("tasks")
+  @@index([isCompleted])
+  @@index([priority])
+  @@index([dueDate])
+  @@index([isCompleted, dueDate])
 }
 
 model TaskAssignee {
@@ -138,6 +175,7 @@ model TaskAssignee {
 
   @@id([taskId, personId])
   @@map("task_assignees")
+  @@index([personId])
 }
 
 // 5. Groups (Групи - за гъвкаво групиране по всяко поле)
@@ -161,4 +199,171 @@ model GroupMember {
 
   @@id([groupId, personId])
   @@map("group_members")
+}
+
+// 6. Activity Logs (История на взаимодействия)
+model ActivityLog {
+  id          Int      @id @default(autoincrement())
+  personId    Int      @map("person_id")
+  person      Person   @relation(fields: [personId], references: [id], onDelete: Cascade)
+  type        String   // Enum-like: 'note', 'call', 'email', 'meeting'
+  content     String
+  date        DateTime @default(now())
+  
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  @@map("activity_logs")
+  @@index([personId])
+}
+
+// 7. Email Templates
+model EmailTemplate {
+  id        Int      @id @default(autoincrement())
+  name      String   @unique
+  subject   String
+  body      String   
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@map("email_templates")
+}
+
+// 8. Saved Filters (Smart Lists)
+model SavedFilter {
+  id        Int      @id @default(autoincrement())
+  name      String   @unique
+  color     String   @default("#6366F1")
+  filters   String   // JSON: {query, city, role, status, profession, gender, groupId, tagId}
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@map("saved_filters")
+}
+
+// 9. Reminders (Напомняния)
+model Reminder {
+  id          Int      @id @default(autoincrement())
+  personId    Int      @map("person_id")
+  person      Person   @relation(fields: [personId], references: [id], onDelete: Cascade)
+  title       String
+  description String?
+  dueDate     DateTime @map("due_date")
+  type        String   @default("follow_up") // follow_up, call, meeting, email, other
+  isCompleted Boolean  @default(false) @map("is_completed")
+  createdAt   DateTime @default(now()) @map("created_at")
+
+  @@map("reminders")
+  @@index([personId])
+  @@index([dueDate])
+  @@index([isCompleted, dueDate])
+}
+
+// 10. Person Relations (Връзки между хора)
+model PersonRelation {
+  id          Int      @id @default(autoincrement())
+  personId    Int      @map("person_id")
+  relatedId   Int      @map("related_id")
+  type        String   // family, colleague, referral, mentor, neighbor, party
+  description String?
+
+  person      Person   @relation("PersonRelationsFrom", fields: [personId], references: [id], onDelete: Cascade)
+  related     Person   @relation("PersonRelationsTo", fields: [relatedId], references: [id], onDelete: Cascade)
+
+  createdAt   DateTime @default(now()) @map("created_at")
+
+  @@unique([personId, relatedId])
+  @@map("person_relations")
+  @@index([personId])
+  @@index([relatedId])
+}
+
+// 11. Change Log (Audit Trail)
+model ChangeLog {
+  id        Int      @id @default(autoincrement())
+  personId  Int      @map("person_id")
+  person    Person   @relation(fields: [personId], references: [id], onDelete: Cascade)
+  field     String
+  oldValue  String?  @map("old_value")
+  newValue  String?  @map("new_value")
+  changedAt DateTime @default(now()) @map("changed_at")
+
+  @@map("change_logs")
+  @@index([personId])
+  @@index([changedAt])
+}
+
+// 12. Message Log (Групови съобщения)
+model MessageLog {
+  id             Int      @id @default(autoincrement())
+  type           String   // email, telegram_link
+  templateName   String?  @map("template_name")
+  subject        String?
+  body           String
+  recipientCount Int      @map("recipient_count")
+  sentAt         DateTime @default(now()) @map("sent_at")
+  status         String   @default("sent") // sent, failed, partial
+
+  @@map("message_logs")
+  @@index([sentAt])
+}
+
+// 13. Campaigns (Кампании)
+model Campaign {
+  id          Int       @id @default(autoincrement())
+  name        String
+  description String?
+  type        String    @default("outreach") // election, recruitment, protest, petition, fundraising, outreach
+  status      String    @default("planning") // planning, active, paused, completed, cancelled
+  startDate   DateTime  @map("start_date")
+  endDate     DateTime? @map("end_date")
+  goal        String?
+  budget      Float?
+  createdAt   DateTime  @default(now()) @map("created_at")
+  updatedAt   DateTime  @updatedAt @map("updated_at")
+
+  members     CampaignMember[]
+  tasks       Task[]
+  notes       CampaignNote[]
+
+  @@map("campaigns")
+  @@index([status])
+  @@index([startDate])
+}
+
+model CampaignMember {
+  id         Int      @id @default(autoincrement())
+  campaignId Int      @map("campaign_id")
+  personId   Int      @map("person_id")
+  role       String   @default("volunteer") // leader, coordinator, volunteer
+  joinedAt   DateTime @default(now()) @map("joined_at")
+
+  campaign   Campaign @relation(fields: [campaignId], references: [id], onDelete: Cascade)
+  person     Person   @relation(fields: [personId], references: [id], onDelete: Cascade)
+
+  @@unique([campaignId, personId])
+  @@map("campaign_members")
+}
+
+model CampaignNote {
+  id         Int      @id @default(autoincrement())
+  campaignId Int      @map("campaign_id")
+  content    String
+  createdAt  DateTime @default(now()) @map("created_at")
+
+  campaign   Campaign @relation(fields: [campaignId], references: [id], onDelete: Cascade)
+
+  @@map("campaign_notes")
+  @@index([campaignId])
+}
+
+// 14. Telegram Templates
+model TelegramTemplate {
+  id        Int      @id @default(autoincrement())
+  name      String   @unique
+  message   String   // Telegram message content
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@map("telegram_templates")
 }

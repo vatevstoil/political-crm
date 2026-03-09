@@ -10,9 +10,11 @@ interface EditableFieldProps {
   icon?: React.ComponentType<{ className?: string }>
   onSave: (value: string) => Promise<void>
   options?: { value: string; label: string }[]
+  type?: 'text' | 'date'
+  valueClassName?: string
 }
 
-export default function EditableField({ label, value, icon: Icon, onSave, options }: EditableFieldProps) {
+export default function EditableField({ label, value, icon: Icon, onSave, options, type = 'text', valueClassName }: EditableFieldProps) {
   const [isEditing, setIsEditing] = useState(false)
   const [editValue, setEditValue] = useState(value || '')
   const [isSaving, setIsSaving] = useState(false)
@@ -56,24 +58,25 @@ export default function EditableField({ label, value, icon: Icon, onSave, option
     }
   }
 
-  if (!value && !isEditing) return null
-
   return (
       <div className="flex items-start gap-2 mb-3 group">
-        {Icon && <Icon className="h-4 w-4 text-slate-500 mt-0.5 flex-shrink-0" />}
+        {Icon && <Icon className="h-4 w-4 text-slate-500 dark:text-slate-400 mt-0.5 flex-shrink-0" />}
         <div className="flex-1 min-w-0">
-          <p className="text-xs text-slate-500 uppercase tracking-wide font-medium">{label}</p>
-        
+          {label && <p className="text-sm font-bold text-slate-700 dark:text-slate-400 uppercase tracking-wide mb-0.5">{label}</p>}
+
         {isEditing ? (
-          <div className="flex items-center gap-1 mt-1">
+          <div className="mt-1 space-y-1.5">
             {options ? (
               <select
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any
                 ref={inputRef as any}
                 value={editValue}
                 onChange={(e) => setEditValue(e.target.value)}
-                className="flex-1 text-sm border border-slate-300 rounded px-2 py-1 focus:outline-none focus:ring-2 focus:ring-blue-500 bg-slate-50 text-slate-700"
+                className="w-full text-sm border border-slate-300 dark:border-slate-600 rounded px-2.5 py-1.5 focus:outline-none focus:ring-2 focus:ring-blue-500 bg-slate-50 dark:bg-slate-700 text-slate-800 dark:text-slate-200 font-semibold"
                 onKeyDown={handleKeyDown}
+                title="Избери опция"
               >
+                <option value="">— Изберете —</option>
                 {options.map(opt => (
                   <option key={opt.value} value={opt.value}>{opt.label}</option>
                 ))}
@@ -81,34 +84,53 @@ export default function EditableField({ label, value, icon: Icon, onSave, option
             ) : (
               <input
                 ref={inputRef}
-                type="text"
+                type={type}
                 value={editValue}
                 onChange={(e) => setEditValue(e.target.value)}
-                className="flex-1 text-sm border border-slate-300 rounded px-2 py-1 focus:outline-none focus:ring-2 focus:ring-blue-500 bg-slate-50 text-slate-700"
+                className="w-full text-sm border border-slate-300 dark:border-slate-600 rounded px-2.5 py-1.5 focus:outline-none focus:ring-2 focus:ring-blue-500 bg-slate-50 dark:bg-slate-700 text-slate-800 dark:text-slate-200 font-semibold"
                 onKeyDown={handleKeyDown}
+                title={type === 'date' ? 'Избери дата' : 'Въведи текст'}
               />
             )}
-            <button
-              onClick={handleSave}
-              disabled={isSaving}
-              className="p-1 rounded bg-slate-600 text-white hover:bg-slate-700 disabled:opacity-50"
-            >
-              <Check className="h-3.5 w-3.5" />
-            </button>
-            <button
-              onClick={handleCancel}
-              className="p-1 rounded bg-slate-200 text-slate-600 hover:bg-slate-300"
-            >
-              <X className="h-3.5 w-3.5" />
-            </button>
+            <div className="flex gap-1.5">
+              <button
+                onClick={handleSave}
+                disabled={isSaving}
+                className="flex-1 py-1 rounded bg-teal-600 text-white hover:bg-teal-700 disabled:opacity-50 text-xs font-medium flex items-center justify-center gap-1"
+                title="Запази"
+              >
+                <Check className="h-3 w-3" />
+                Запази
+              </button>
+              <button
+                onClick={handleCancel}
+                className="flex-1 py-1 rounded bg-slate-200 dark:bg-slate-600 text-slate-600 dark:text-slate-300 hover:bg-slate-300 dark:hover:bg-slate-500 text-xs font-medium flex items-center justify-center gap-1"
+                title="Отказ"
+              >
+                <X className="h-3 w-3" />
+                Отказ
+              </button>
+            </div>
           </div>
         ) : (
-          <div 
-            onClick={() => setIsEditing(true)}
-            className="flex items-center gap-2 cursor-pointer hover:bg-slate-100 rounded px-1 -ml-1 py-0.5 transition-colors group/field"
+          <div
+            onClick={() => { setEditValue(value || ''); setIsEditing(true) }}
+            onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); setEditValue(value || ''); setIsEditing(true) } }}
+            role="button"
+            tabIndex={0}
+            aria-label={`Редактирай ${label}`}
+            className="flex items-center gap-2 cursor-pointer hover:bg-slate-100 dark:hover:bg-slate-700/50 rounded px-1 -ml-1 py-0.5 transition-colors group/field"
           >
-            <p className="text-sm text-slate-600 break-words">{value}</p>
-            <Pencil className="h-3 w-3 text-slate-500 opacity-0 group-hover/field:opacity-100 flex-shrink-0" />
+            {value ? (
+              <p className={valueClassName || "text-base text-slate-800 dark:text-slate-200 font-semibold break-words leading-relaxed"}>
+                {type === 'date'
+                  ? new Date(value).toLocaleDateString('bg-BG', { day: 'numeric', month: 'long', year: 'numeric' })
+                  : options?.find(o => o.value === value)?.label ?? value}
+              </p>
+            ) : (
+              <p className="text-sm text-slate-400 dark:text-slate-500 italic">Не е зададено</p>
+            )}
+            <Pencil className="h-3.5 w-3.5 text-slate-400 dark:text-slate-500 opacity-0 group-hover/field:opacity-100 group-focus-visible/field:opacity-100 flex-shrink-0" />
           </div>
         )}
       </div>

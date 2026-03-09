@@ -6,10 +6,10 @@ import { revalidatePath } from 'next/cache'
 
 const EventSchema = z.object({
   title: z.string().min(1, 'Заглавието е задължително'),
-  description: z.string().optional(),
+  description: z.string().nullish(),
   startTime: z.string().min(1, 'Началната дата е задължителна'),
-  endTime: z.string().optional(),
-  location: z.string().optional(),
+  endTime: z.string().nullish(),
+  location: z.string().nullish(),
 })
 
 export type EventWithId = {
@@ -123,7 +123,28 @@ export async function getEvents(): Promise<EventWithId[]> {
     return events
   } catch (error) {
     console.error('Failed to fetch events:', error)
-    throw new Error('Failed to fetch events.')
+    throw new Error('Грешка при зареждане на събитията.')
+  }
+}
+
+export async function getEventsByMonth(year: number, month: number): Promise<EventWithId[]> {
+  try {
+    const start = new Date(year, month, 1)
+    const end = new Date(year, month + 1, 0, 23, 59, 59)
+
+    const events = await prisma.event.findMany({
+      where: {
+        startTime: {
+          gte: start,
+          lte: end,
+        },
+      },
+      orderBy: { startTime: 'asc' },
+    })
+    return events
+  } catch (error) {
+    console.error('Failed to fetch events by month:', error)
+    throw new Error('Грешка при зареждане на събитията за месеца.')
   }
 }
 
@@ -145,6 +166,6 @@ export async function getUpcomingEvents(days: number = 7): Promise<EventWithId[]
     return events
   } catch (error) {
     console.error('Failed to fetch upcoming events:', error)
-    throw new Error('Failed to fetch upcoming events.')
+    throw new Error('Грешка при зареждане на предстоящите събития.')
   }
 }

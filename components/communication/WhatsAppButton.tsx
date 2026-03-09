@@ -9,17 +9,10 @@ interface WhatsAppButtonProps {
 }
 
 function formatPhoneNumber(phone: string): string {
-  const cleaned = phone.replace(/\D/g, '')
-  
-  if (cleaned.startsWith('0')) {
-    return '359' + cleaned.slice(1)
-  }
-  
-  if (!cleaned.startsWith('359')) {
-    return '359' + cleaned
-  }
-  
-  return cleaned
+  // Just strip non-digits — wa.me needs international format without '+'
+  // e.g. "+33 6 62 25 17 83" → "33662251783"
+  // e.g. "+359 888 123456" → "359888123456"
+  return phone.replace(/\D/g, '')
 }
 
 export default function WhatsAppButton({ phone, message = '', name }: WhatsAppButtonProps) {

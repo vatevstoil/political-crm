@@ -1,8 +1,15 @@
 'use server'
 
 import { prisma } from '@/lib/prisma'
-import { Person } from '@prisma/client'
 import { getCityCoordinates, CityCoordinates } from '@/lib/geo-data'
+import { unstable_cache } from 'next/cache'
+
+export type BirthdayPerson = {
+  id: number
+  fullName: string
+  birthDate: Date | null
+  photoUrl: string | null
+}
 
 export type DashboardStats = {
   totalMembers: number
@@ -28,7 +35,7 @@ export type DashboardStats = {
     group: string
     count: number
   }[]
-  upcomingBirthdays: Person[]
+  upcomingBirthdays: BirthdayPerson[]
   taskStats: {
     total: number
     completed: number
@@ -71,9 +78,26 @@ export type DashboardStats = {
     endTime: Date | null
     location: string | null
   }[]
+  statusDistribution: { status: string; count: number }[]
+  membershipGrowth: { month: string; count: number }[]
+  recentActivities: {
+    id: number
+    type: string
+    content: string
+    createdAt: Date
+    person: { id: number; fullName: string }
+  }[]
 }
 
-export async function getDashboardStats(): Promise<DashboardStats> {
+export const getDashboardStats = unstable_cache(
+  async (): Promise<DashboardStats> => {
+    return getDashboardStatsInternal()
+  },
+  ['dashboard-stats'],
+  { revalidate: 300, tags: ['dashboard'] }
+)
+
+async function getDashboardStatsInternal(): Promise<DashboardStats> {
   const now = new Date()
   const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1)
   const today = new Date(now.getFullYear(), now.getMonth(), now.getDate())
@@ -90,6 +114,9 @@ export async function getDashboardStats(): Promise<DashboardStats> {
     overdueTasksResult,
     upcomingTasksResult,
     upcomingEventsResult,
+    statusDistributionResult,
+    membershipGrowthResult,
+    recentActivitiesResult,
   ] = await Promise.all([
     prisma.person.count(),
     prisma.person.count({
@@ -150,7 +177,14 @@ export async function getDashboardStats(): Promise<DashboardStats> {
       orderBy: { startTime: 'asc' },
       take: 5,
     }),
-  ])
+    getStatusDistributionInternal(),
+    getMembershipGrowthInternal(),
+    prisma.activityLog.findMany({
+      include: { person: { select: { id: true, fullName: true } } },
+      orderBy: { createdAt: 'desc' },
+      take: 10,
+    }),
+  ] as const)
 
   const upcomingBirthdays = getUpcomingBirthdays(allPeople)
 
@@ -203,6 +237,9 @@ export async function getDashboardStats(): Promise<DashboardStats> {
     overdueTasks: overdueTasksResult,
     upcomingTasks: upcomingTasksResult,
     upcomingEvents: upcomingEventsResult,
+    statusDistribution: statusDistributionResult,
+    membershipGrowth: membershipGrowthResult,
+    recentActivities: recentActivitiesResult,
   }
 }
 
@@ -226,7 +263,7 @@ async function getTaskStatsInternal() {
   }
 }
 
-function getUpcomingBirthdays(people: { id: number; fullName: string; birthDate: Date | null; photoUrl: string | null }[]): Person[] {
+function getUpcomingBirthdays(people: { id: number; fullName: string; birthDate: Date | null; photoUrl: string | null }[]): BirthdayPerson[] {
   const today = new Date()
   const nextWeek = new Date(today)
   nextWeek.setDate(today.getDate() + 7)
@@ -249,7 +286,51 @@ function getUpcomingBirthdays(people: { id: number; fullName: string; birthDate:
       const bThisYear = new Date(today.getFullYear(), bDate.getMonth(), bDate.getDate())
       return aThisYear.getTime() - bThisYear.getTime()
     })
-    .slice(0, 5) as unknown as Person[]
+    .slice(0, 5)
+}
+
+async function getStatusDistributionInternal() {
+  const [active, inactive, excluded, lead, prospect] = await Promise.all([
+    prisma.person.count({ where: { status: 'Active' } }),
+    prisma.person.count({ where: { status: 'Inactive' } }),
+    prisma.person.count({ where: { status: 'Excluded' } }),
+    prisma.person.count({ where: { status: 'Lead' } }),
+    prisma.person.count({ where: { status: 'Prospect' } }),
+  ])
+  return [
+    { status: 'Активен', count: active },
+    { status: 'Неактивен', count: inactive },
+    { status: 'Изключен', count: excluded },
+    { status: 'Потенциален', count: lead },
+    { status: 'Перспективен', count: prospect },
+  ]
+}
+
+async function getMembershipGrowthInternal() {
+  const now = new Date()
+
+  const monthRanges = Array.from({ length: 12 }, (_, idx) => {
+    const i = 11 - idx
+    const date = new Date(now.getFullYear(), now.getMonth() - i, 1)
+    const nextMonth = new Date(date.getFullYear(), date.getMonth() + 1, 1)
+    const label = date.toLocaleDateString('bg-BG', { month: 'short', year: '2-digit' })
+    return { date, nextMonth, label }
+  })
+
+  const counts = await Promise.all(
+    monthRanges.map(({ date, nextMonth }) =>
+      prisma.person.count({
+        where: {
+          createdAt: { gte: date, lt: nextMonth },
+        },
+      })
+    )
+  )
+
+  return monthRanges.map((range, idx) => ({
+    month: range.label,
+    count: counts[idx],
+  }))
 }
 
 function calculateAgeGroups(people: { birthDate: Date | null }[]) {
@@ -261,7 +342,11 @@ function calculateAgeGroups(people: { birthDate: Date | null }[]) {
   people.forEach((p) => {
     if (!p.birthDate) return
     const birthDate = new Date(p.birthDate)
-    const age = now.getFullYear() - birthDate.getFullYear()
+    let age = now.getFullYear() - birthDate.getFullYear()
+    const monthDiff = now.getMonth() - birthDate.getMonth()
+    if (monthDiff < 0 || (monthDiff === 0 && now.getDate() < birthDate.getDate())) {
+      age--
+    }
     
     if (age >= 18 && age <= 30) group18_30++
     else if (age > 30 && age <= 50) group31_50++

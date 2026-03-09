@@ -16,7 +16,7 @@ export default function BackButton({ href, label = 'Назад' }: BackButtonPro
     return (
       <Link
         href={href}
-        className="inline-flex items-center text-sm font-medium text-gray-500 hover:text-gray-700 transition-colors"
+        className="inline-flex items-center text-sm font-medium text-gray-500 dark:text-slate-400 hover:text-gray-700 dark:hover:text-slate-200 transition-colors"
       >
         <ArrowLeft className="mr-2 h-4 w-4" />
         {label}
@@ -27,7 +27,7 @@ export default function BackButton({ href, label = 'Назад' }: BackButtonPro
   return (
     <button
       onClick={() => router.back()}
-      className="inline-flex items-center text-sm font-medium text-gray-500 hover:text-gray-700 transition-colors"
+      className="inline-flex items-center text-sm font-medium text-gray-500 dark:text-slate-400 hover:text-gray-700 dark:hover:text-slate-200 transition-colors"
     >
       <ArrowLeft className="mr-2 h-4 w-4" />
       {label}

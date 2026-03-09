@@ -45,8 +45,9 @@ export default function AgeStructureChart({ data }: AgeStructureChartProps) {
       title: {
         display: true,
         text: 'Възрастова структура',
-        font: { size: 14 },
-        color: '#374151',
+        font: { size: 16, weight: 'bold' as const, family: 'Inter, system-ui, sans-serif' },
+        color: '#1f2937',
+        padding: { top: 8, bottom: 16 },
       },
     },
   }
@@ -55,7 +56,7 @@ export default function AgeStructureChart({ data }: AgeStructureChartProps) {
 
   if (!hasData) {
     return (
-      <div className="h-64 flex items-center justify-center text-gray-500">
+      <div className="h-64 flex items-center justify-center text-gray-600 text-base">
         Няма данни за възрастови групи
       </div>
     )

@@ -55,7 +55,7 @@ export function SkeletonText({ lines = 3, className = '' }: SkeletonProps & { li
 
 export function SkeletonFilterBar({ className = '' }: SkeletonProps) {
   return (
-    <div className={`bg-white/80 backdrop-blur-md border border-slate-200 rounded-2xl shadow-md mb-6 p-4 ${className}`}>
+    <div className={`bg-white/80 dark:bg-slate-800/80 backdrop-blur-md border border-slate-200 dark:border-slate-700 rounded-2xl shadow-md mb-6 p-4 ${className}`}>
       <div className="flex gap-2 items-center">
         <div className="h-12 flex-grow bg-slate-200 rounded-xl animate-pulse" />
         <div className="h-12 w-12 bg-slate-200 rounded-xl animate-pulse" />

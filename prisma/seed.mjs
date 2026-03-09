@@ -21,7 +21,7 @@ async function main() {
 
   // Create People
   console.log('Upserting person 1...')
-  const person1 = await prisma.person.upsert({
+  await prisma.person.upsert({
     where: { membershipCardId: '0001' },
     update: {},
     create: {
@@ -47,7 +47,7 @@ async function main() {
   })
 
   console.log('Upserting person 2...')
-  const person2 = await prisma.person.upsert({
+  await prisma.person.upsert({
     where: { membershipCardId: '0002' },
     update: {},
     create: {

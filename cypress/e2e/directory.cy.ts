@@ -1,6 +1,6 @@
 describe('Directory Page', () => {
   beforeEach(() => {
-    cy.visit('http://localhost:3000/directory')
+    cy.visit('/directory')
   })
 
   it('should display the directory page header', () => {
@@ -23,13 +23,14 @@ describe('Directory Page', () => {
     cy.get('input[placeholder*="Търсене"]').type('Иван')
     // Wait for debounce
     cy.wait(1000)
-    
+
     cy.contains('Иван Иванов').should('be.visible')
     cy.contains('Мария Петрова').should('not.exist')
   })
 
   it('should filter by city', () => {
-    cy.contains('Всички Градове').parent().select('Пловдив')
+    cy.get('input[placeholder="Град"]').click()
+    cy.contains('button', 'Пловдив').click()
     // Wait for debounce/navigation
     cy.wait(1000)
 

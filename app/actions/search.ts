@@ -10,7 +10,7 @@ export async function searchPeople(query: string): Promise<SearchResult> {
     return []
   }
 
-  const searchTerm = query.trim()
+  const searchTerm = query.trim().slice(0, 100)
 
   try {
     const results = await prisma.person.findMany({

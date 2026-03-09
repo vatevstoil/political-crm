@@ -22,7 +22,7 @@ interface PeopleByCityChartProps {
 export default function PeopleByCityChart({ data }: PeopleByCityChartProps) {
   const router = useRouter()
 
-  const handleClick = useCallback((event: any, elements: any[]) => {
+  const handleClick = useCallback((event: unknown, elements: { index: number }[]) => {
     if (elements.length > 0) {
       const index = elements[0].index
       const city = data[index]?.city
@@ -57,12 +57,13 @@ export default function PeopleByCityChart({ data }: PeopleByCityChartProps) {
       title: {
         display: true,
         text: 'Членове по градове (кликни за филтриране)',
-        font: { size: 14 },
-        color: '#374151',
+        font: { size: 16, weight: 'bold' as const, family: 'Inter, system-ui, sans-serif' },
+        color: '#1f2937',
+        padding: { top: 8, bottom: 16 },
       },
       tooltip: {
         callbacks: {
-          label: (context: any) => {
+          label: (context: { raw: unknown }) => {
             return `${context.raw} членове`
           }
         }
@@ -80,7 +81,7 @@ export default function PeopleByCityChart({ data }: PeopleByCityChartProps) {
 
   if (data.length === 0) {
     return (
-      <div className="h-64 flex items-center justify-center text-gray-500">
+      <div className="h-64 flex items-center justify-center text-gray-600 text-base">
         Няма данни за градове
       </div>
     )

@@ -1,0 +1,23 @@
+__tests__/Home.test.tsx(5,1): error TS2708: Cannot use namespace 'jest' as a value.
+__tests__/Home.test.tsx(8,13): error TS2708: Cannot use namespace 'jest' as a value.
+__tests__/Home.test.tsx(9,16): error TS2708: Cannot use namespace 'jest' as a value.
+__tests__/Home.test.tsx(10,17): error TS2708: Cannot use namespace 'jest' as a value.
+__tests__/Home.test.tsx(11,13): error TS2708: Cannot use namespace 'jest' as a value.
+__tests__/Home.test.tsx(16,1): error TS2708: Cannot use namespace 'jest' as a value.
+__tests__/Home.test.tsx(23,1): error TS2708: Cannot use namespace 'jest' as a value.
+__tests__/Home.test.tsx(24,22): error TS2708: Cannot use namespace 'jest' as a value.
+__tests__/Home.test.tsx(41,3): error TS1117: An object literal cannot have multiple properties with the same name.
+__tests__/Home.test.tsx(62,5): error TS2708: Cannot use namespace 'jest' as a value.
+__tests__/Home.test.tsx(63,50): error TS2694: Namespace 'global.jest' has no exported member 'Mock'.
+__tests__/Home.test.tsx(70,21): error TS2339: Property 'toBeInTheDocument' does not exist on type 'Assertion'.
+__tests__/Home.test.tsx(76,47): error TS2339: Property 'toBeInTheDocument' does not exist on type 'Assertion'.
+__tests__/Home.test.tsx(77,50): error TS2339: Property 'toBeInTheDocument' does not exist on type 'Assertion'.
+__tests__/Home.test.tsx(78,50): error TS2339: Property 'toBeInTheDocument' does not exist on type 'Assertion'.
+__tests__/Home.test.tsx(79,37): error TS2339: Property 'toBeInTheDocument' does not exist on type 'Assertion'.
+__tests__/Home.test.tsx(86,25): error TS2339: Property 'toBeInTheDocument' does not exist on type 'Assertion'.
+components/dashboard/AgeStructureChart.tsx(67,29): error TS2322: Type '{ responsive: boolean; maintainAspectRatio: boolean; plugins: { legend: { position: "bottom"; }; title: { display: boolean; text: string; font: { size: number; weight: string; family: string; }; color: string; padding: { ...; }; }; }; }' is not assignable to type '_DeepPartialObject<CoreChartOptions<"pie"> & ElementChartOptions<"pie"> & PluginChartOptions<"pie"> & DatasetChartOptions<"pie"> & ScaleChartOptions<...> & DoughnutControllerChartOptions>'.
+  The types of 'plugins.title.font' are incompatible between these types.
+    Type '{ size: number; weight: string; family: string; }' is not assignable to type '((ctx: ScriptableChartContext, options: AnyObject) => Partial<FontSpec> | undefined) | _DeepPartialObject<Partial<FontSpec>> | _DeepPartialObject<...> | undefined'.
+      Type '{ size: number; weight: string; family: string; }' is not assignable to type '_DeepPartialObject<ScriptableOptions<Partial<FontSpec>, ScriptableChartContext>>'.
+        Types of property 'weight' are incompatible.
+          Type 'string' is not assignable to type 'number | "bold" | "normal" | "lighter" | "bolder" | ((ctx: ScriptableChartContext, options: AnyObject) => number | "bold" | "normal" | "lighter" | "bolder" | null | undefined) | null | undefined'.

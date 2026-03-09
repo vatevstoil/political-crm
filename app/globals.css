@@ -1,30 +1,57 @@
 @import "tailwindcss";
 
+/* Use class-based dark mode (toggled via .dark on <html>) */
+@custom-variant dark (&:where(.dark, .dark *));
+
 :root {
   --background: #ffffff;
   --foreground: #171717;
   --gradient-primary: linear-gradient(135deg, #3b82f6 0%, #8b5cf6 100%);
   --gradient-secondary: linear-gradient(135deg, #8b5cf6 0%, #ec4899 100%);
   --gradient-text: linear-gradient(135deg, #3b82f6 0%, #8b5cf6 100%);
+
+  /* Typography Scale */
+  --font-size-xs: 0.75rem;      /* 12px */
+  --font-size-sm: 0.875rem;     /* 14px */
+  --font-size-base: 1rem;       /* 16px */
+  --font-size-lg: 1.125rem;     /* 18px */
+  --font-size-xl: 1.25rem;      /* 20px */
+  --font-size-2xl: 1.5rem;      /* 24px */
+  --font-size-3xl: 2rem;        /* 32px */
+  --font-size-4xl: 2.5rem;      /* 40px */
+
+  /* Line Heights */
+  --line-height-tight: 1.2;
+  --line-height-normal: 1.5;
+  --line-height-relaxed: 1.75;
+
+  /* Font Weights */
+  --font-weight-normal: 400;
+  --font-weight-medium: 500;
+  --font-weight-semibold: 600;
+  --font-weight-bold: 700;
+
+  /* Text Colors - High Contrast */
+  --text-primary: #0f172a;      /* slate-900 */
+  --text-secondary: #1e293b;    /* slate-800 */
+  --text-muted: #475569;        /* slate-600 */
+  --text-subtle: #64748b;       /* slate-500 */
 }
 
 .dark {
   --background: #0a0a0a;
   --foreground: #ededed;
-}
-
-@media (prefers-color-scheme: dark) {
-  :root:not(.light) {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+  --text-primary: #f8fafc;     /* slate-50 */
+  --text-secondary: #f1f5f9;   /* slate-100 */
+  --text-muted: #cbd5e1;       /* slate-300 */
+  --text-subtle: #94a3b8;      /* slate-400 */
 }
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --font-sans: var(--font-inter), ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  --font-mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
 
   /* Ocean color palette */
   --color-ocean-50: #f0f9ff;
@@ -44,18 +71,86 @@
   --color-teal-600: #0d9488;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
-}
-
 body {
   background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  color: var(--text-secondary);
+  font-family: var(--font-inter), ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  font-size: var(--font-size-base);
+  font-weight: var(--font-weight-normal);
+  line-height: var(--line-height-normal);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
 }
+
+/* Heading reset and styles */
+h1, h2, h3, h4, h5, h6 {
+  margin: 0;
+  font-weight: var(--font-weight-semibold);
+  line-height: var(--line-height-tight);
+  color: var(--text-primary);
+}
+
+h1 {
+  font-size: var(--font-size-3xl);
+  font-weight: var(--font-weight-bold);
+}
+
+h2 {
+  font-size: var(--font-size-2xl);
+}
+
+h3 {
+  font-size: var(--font-size-xl);
+}
+
+h4 {
+  font-size: var(--font-size-lg);
+}
+
+h5, h6 {
+  font-size: var(--font-size-base);
+}
+
+/* Paragraph and text elements */
+p {
+  margin: 0 0 1rem 0;
+  color: var(--text-secondary);
+}
+
+/* Link styles */
+a {
+  color: inherit;
+  text-decoration: none;
+  transition: color 0.2s ease;
+}
+
+a:hover {
+  color: var(--text-muted);
+}
+
+/* Small text */
+small {
+  font-size: var(--font-size-sm);
+}
+
+/* Typography utility classes */
+.text-xs { font-size: var(--font-size-xs); }
+.text-sm { font-size: var(--font-size-sm); }
+.text-base { font-size: var(--font-size-base); }
+.text-lg { font-size: var(--font-size-lg); }
+.text-xl { font-size: var(--font-size-xl); }
+.text-2xl { font-size: var(--font-size-2xl); }
+.text-3xl { font-size: var(--font-size-3xl); }
+
+.font-normal { font-weight: var(--font-weight-normal); }
+.font-medium { font-weight: var(--font-weight-medium); }
+.font-semibold { font-weight: var(--font-weight-semibold); }
+.font-bold { font-weight: var(--font-weight-bold); }
+
+.leading-tight { line-height: var(--line-height-tight); }
+.leading-normal { line-height: var(--line-height-normal); }
+.leading-relaxed { line-height: var(--line-height-relaxed); }
 
 /* Dark mode overrides using CSS variables for consistency */
 .dark body {
@@ -99,7 +194,7 @@ body {
 
 /* Improved Glassmorphism System */
 :root {
-  --glass-bg: rgba(255, 255, 255, 0.7);
+  --glass-bg: rgba(255, 255, 255, 0.85);
   --glass-border: rgba(255, 255, 255, 0.5);
   --glass-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.1);
   --glass-input-bg: rgba(255, 255, 255, 0.9);
@@ -125,6 +220,8 @@ body {
   border: 1px solid var(--glass-border);
   border-radius: 20px;
   box-shadow: var(--glass-shadow);
+  position: relative;
+  overflow: visible;
 }
 
 .glass-card {
@@ -136,83 +233,67 @@ body {
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
 }
 
-.glass-card-hover {
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+/* Input and Textarea Dark Mode Overrides (safety net for unstyled inputs) */
+.dark input,
+.dark textarea,
+.dark select {
+  background-color: #1e293b; /* slate-800 */
+  border-color: #334155; /* slate-700 */
+  color: #f1f5f9; /* slate-100 */
 }
 
-.glass-card-hover:hover {
-  transform: translateY(-2px);
-  background: rgba(255, 255, 255, 0.8);
-  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.12);
+.dark input::placeholder,
+.dark textarea::placeholder {
+  color: #94a3b8; /* slate-400 */
 }
 
-.dark .glass-card-hover:hover {
-  background: rgba(51, 65, 85, 0.9); /* slate-700 */
-  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.4);
+/* Fix for search inputs specifically */
+.dark .glass-input {
+  background: rgba(30, 41, 59, 0.8);
+  border-color: rgba(255, 255, 255, 0.1);
+  color: #f1f5f9;
 }
 
-.glass-input {
-  background: var(--glass-input-bg);
-  border: 1px solid var(--glass-input-border);
-  border-radius: 12px;
-  box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.03);
-  transition: all 0.2s ease;
-  color: var(--glass-input-text);
+/* Labels in Dark Mode (safety net for unstyled labels) */
+.dark label {
+  color: #cbd5e1; /* slate-300 */
 }
 
-.glass-input::placeholder {
-  color: var(--glass-input-placeholder);
-  opacity: 1;
-}
-
-.glass-input:focus {
-  background: var(--background);
-  border-color: rgba(59, 130, 246, 0.5);
-  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
-  outline: none;
-}
-
-.glass-button {
-  background: var(--glass-input-bg);
-  border: 1px solid var(--glass-border);
-  border-radius: 12px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
-  transition: all 0.2s ease;
-  color: var(--glass-input-text);
-}
-
-.glass-button:hover {
-  background: rgba(255, 255, 255, 1);
-  transform: translateY(-1px);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+/* Buttons in Dark Mode */
+.dark .glass-button {
+  background: rgba(51, 65, 85, 0.6); /* slate-700 low opacity */
+  color: #f1f5f9;
+  border-color: rgba(255, 255, 255, 0.1);
 }
 
 .dark .glass-button:hover {
-  background: rgba(51, 65, 85, 1); /* slate-700 */
+  background: rgba(71, 85, 105, 0.8); /* slate-600 */
 }
 
-/* Primary buttons need to stay vibrant */
-.glass-button-primary {
-  background: linear-gradient(135deg, rgba(59, 130, 246, 0.9) 0%, rgba(139, 92, 246, 0.9) 100%);
-  border: 1px solid rgba(255, 255, 255, 0.4);
-  border-radius: 12px;
-  color: white;
-  box-shadow: 0 4px 15px rgba(59, 130, 246, 0.3);
-  transition: all 0.2s ease;
+/* Map Dark Mode Filter */
+.dark .leaflet-layer,
+.dark .leaflet-control-zoom-in,
+.dark .leaflet-control-zoom-out,
+.dark .leaflet-control-attribution {
+  filter: invert(100%) hue-rotate(180deg) brightness(95%) contrast(90%);
 }
 
-.glass-button-primary:hover {
-  background: linear-gradient(135deg, rgba(59, 130, 246, 1) 0%, rgba(139, 92, 246, 1) 100%);
-  box-shadow: 0 6px 20px rgba(59, 130, 246, 0.4);
-  transform: translateY(-1px);
+.dark .leaflet-container {
+  background: #0f172a;
 }
 
-.glass-timeline-item {
-  background: var(--glass-bg);
-  backdrop-filter: blur(4px);
-  border: 1px solid var(--glass-border);
-  border-radius: 12px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+/* Scrollbar for dark mode */
+.dark ::-webkit-scrollbar-track {
+  background: #0f172a;
+}
+
+.dark ::-webkit-scrollbar-thumb {
+  background: #475569;
+  border-radius: 4px;
+}
+
+.dark ::-webkit-scrollbar-thumb:hover {
+  background: #64748b;
 }
 
 /* Progress and Status styles (keep existing) */
@@ -249,3 +330,84 @@ body {
 .marker-cluster-medium div { background-color: #3b82f6; font-size: 14px; }
 .marker-cluster-large div { background-color: #8b5cf6; font-size: 14px; }
 .custom-cluster-icon, .custom-marker-icon { display: flex !important; align-items: center !important; justify-content: center !important; }
+
+/* Text shadow for improved glassmorphism readability */
+.glass-panel h1,
+.glass-panel h2,
+.glass-panel h3,
+.glass-panel h4,
+.glass-card h1,
+.glass-card h2,
+.glass-card h3,
+.glass-card h4 {
+  text-shadow: 0 1px 2px rgba(255, 255, 255, 0.8);
+}
+
+.dark .glass-panel h1,
+.dark .glass-panel h2,
+.dark .glass-panel h3,
+.dark .glass-panel h4,
+.dark .glass-card h1,
+.dark .glass-card h2,
+.dark .glass-card h3,
+.dark .glass-card h4 {
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
+}
+
+/* Better contrast for text in glass cards */
+.glass-card p,
+.glass-panel p {
+  color: var(--text-secondary);
+}
+
+.glass-card .text-slate-800,
+.glass-panel .text-slate-800 {
+  color: var(--text-primary);
+}
+
+/* Timeline specific text improvements */
+.glass-timeline-item {
+  background: var(--glass-bg);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border-radius: 12px;
+  position: relative;
+  overflow: hidden;
+}
+
+.glass-timeline-item p {
+  color: var(--text-secondary);
+  text-shadow: 0 1px 1px rgba(255, 255, 255, 0.5);
+}
+
+.dark .glass-timeline-item p {
+  text-shadow: 0 1px 1px rgba(0, 0, 0, 0.3);
+}
+
+/* Header mobile menu animation */
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    transform: translateY(-8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-slideDown {
+  animation: slideDown 0.2s ease-out forwards;
+}
+
+/* Accessibility: respect user's motion preferences */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}

@@ -87,7 +87,7 @@ export default function MapVisualization({ geoData }: MapVisualizationProps) {
   if (markers.length === 0) {
     return (
       <div className="glass-card p-6 text-center">
-        <p className="text-slate-600">Няма данни за визуализация на картата</p>
+        <p className="text-slate-700 text-base leading-relaxed">Няма данни за визуализация на картата</p>
       </div>
     )
   }
@@ -101,24 +101,24 @@ export default function MapVisualization({ geoData }: MapVisualizationProps) {
               <MapPin className="h-5 w-5 text-white" />
             </div>
             <div>
-              <h2 className="text-lg font-bold text-slate-900">Географско разпределение</h2>
-              <p className="text-sm text-slate-500">
+              <h2 className="text-xl font-semibold text-slate-900 leading-snug tracking-[-0.01em]">Географско разпределение</h2>
+              <p className="text-base text-slate-600 leading-relaxed">
                 {markers.length} града с регистрирани членове
               </p>
             </div>
           </div>
-          <div className="flex items-center gap-4 text-sm">
+          <div className="flex items-center gap-4 text-base">
             <div className="flex items-center gap-2">
               <div className="w-3 h-3 rounded-full bg-teal-500"></div>
-              <span className="text-slate-600">1-5</span>
+              <span className="text-slate-700 font-medium">1-5</span>
             </div>
             <div className="flex items-center gap-2">
               <div className="w-3 h-3 rounded-full bg-blue-500"></div>
-              <span className="text-slate-600">5-15</span>
+              <span className="text-slate-700 font-medium">5-15</span>
             </div>
             <div className="flex items-center gap-2">
               <div className="w-3 h-3 rounded-full bg-purple-500"></div>
-              <span className="text-slate-600">15+</span>
+              <span className="text-slate-700 font-medium">15+</span>
             </div>
           </div>
         </div>
@@ -153,12 +153,12 @@ export default function MapVisualization({ geoData }: MapVisualizationProps) {
                 icon={createMarkerIcon()}
               >
                 <Popup>
-                  <div className="p-2">
-                    <h3 className="font-bold text-slate-900">{marker.city}</h3>
-                    <p className="text-slate-600">{marker.count} човека</p>
+                  <div className="p-3">
+                    <h3 className="font-semibold text-slate-900 text-base leading-snug">{marker.city}</h3>
+                    <p className="text-slate-700 text-base leading-relaxed">{marker.count} човека</p>
                     <a 
                       href={`/directory?city=${encodeURIComponent(marker.city)}`}
-                      className="text-blue-600 hover:text-blue-800 text-sm"
+                      className="text-blue-600 hover:text-blue-800 text-base font-medium"
                     >
                       Виж всички →
                     </a>
@@ -171,7 +171,7 @@ export default function MapVisualization({ geoData }: MapVisualizationProps) {
       </div>
 
       <div className="p-4 bg-slate-50 border-t border-slate-100">
-        <p className="text-xs text-slate-500 text-center">
+        <p className="text-sm text-slate-600 text-center leading-relaxed">
           Кликнете на клъстер за да видите отделните градове. Кликнете на град за детайли.
         </p>
       </div>

@@ -24,7 +24,7 @@ export default function Pagination({ totalPages, currentPage }: PaginationProps)
   const getPageNumbers = () => {
     const delta = 2 // Number of pages to show on each side of current page
     const range: (number | string)[] = []
-    
+
     // Always show first page
     range.push(1)
 
@@ -63,7 +63,7 @@ export default function Pagination({ totalPages, currentPage }: PaginationProps)
     // If total pages is small (e.g. 1), just return [1]
     if (totalPages === 0) return []
     if (totalPages === 1) return [1]
-    
+
     // Safety check: ensure unique and sorted
     // The logic above generally produces sorted unique, except for edge cases with small totals.
     // For small totals (under 7), we might just show all.
@@ -79,36 +79,57 @@ export default function Pagination({ totalPages, currentPage }: PaginationProps)
 
   const pages = getPageNumbers()
 
+  const disabledClass = "p-2 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-500 dark:text-slate-400 opacity-50 cursor-default"
+  const enabledClass = "p-2 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-500 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors"
+
   return (
     <div className="flex items-center justify-center space-x-2 mt-8">
       {/* First Page */}
-      <Link
-        href={createPageURL(1)}
-        className={`p-2 rounded-md border border-gray-300 bg-white text-gray-500 hover:bg-gray-50 transition-colors ${
-          currentPage <= 1 ? 'pointer-events-none opacity-50' : ''
-        }`}
-        aria-label="First Page"
-      >
-        <ChevronsLeft className="h-5 w-5" />
-      </Link>
+      {currentPage <= 1 ? (
+        <span
+          className={disabledClass}
+          aria-disabled="true"
+          aria-label="Първа страница"
+          tabIndex={-1}
+        >
+          <ChevronsLeft className="h-5 w-5" />
+        </span>
+      ) : (
+        <Link
+          href={createPageURL(1)}
+          className={enabledClass}
+          aria-label="Първа страница"
+        >
+          <ChevronsLeft className="h-5 w-5" />
+        </Link>
+      )}
 
       {/* Previous Page */}
-      <Link
-        href={createPageURL(currentPage - 1)}
-        className={`p-2 rounded-md border border-gray-300 bg-white text-gray-500 hover:bg-gray-50 transition-colors ${
-          currentPage <= 1 ? 'pointer-events-none opacity-50' : ''
-        }`}
-        aria-label="Previous Page"
-      >
-        <ChevronLeft className="h-5 w-5" />
-      </Link>
+      {currentPage <= 1 ? (
+        <span
+          className={disabledClass}
+          aria-disabled="true"
+          aria-label="Предишна страница"
+          tabIndex={-1}
+        >
+          <ChevronLeft className="h-5 w-5" />
+        </span>
+      ) : (
+        <Link
+          href={createPageURL(currentPage - 1)}
+          className={enabledClass}
+          aria-label="Предишна страница"
+        >
+          <ChevronLeft className="h-5 w-5" />
+        </Link>
+      )}
 
       {/* Page Numbers */}
       <div className="hidden sm:flex space-x-2">
         {pages.map((page, index) => {
           if (page === '...') {
             return (
-              <span key={`ellipsis-${index}`} className="px-4 py-2 text-gray-500">
+              <span key={`ellipsis-${index}`} className="px-4 py-2 text-slate-400 dark:text-slate-500">
                 ...
               </span>
             )
@@ -119,10 +140,10 @@ export default function Pagination({ totalPages, currentPage }: PaginationProps)
             <Link
               key={page}
               href={createPageURL(page)}
-              className={`px-4 py-2 rounded-md border text-sm font-medium transition-colors ${
+              className={`px-4 py-2 rounded-lg border text-sm font-medium transition-colors ${
                 isCurrent
-                  ? 'bg-blue-600 text-white border-blue-600'
-                  : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-50'
+                  ? 'bg-purple-600 text-white border-purple-600 shadow-sm shadow-purple-500/30'
+                  : 'bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-700'
               }`}
             >
               {page}
@@ -130,33 +151,51 @@ export default function Pagination({ totalPages, currentPage }: PaginationProps)
           )
         })}
       </div>
-      
+
       {/* Mobile Page Indicator (Simple) */}
-      <div className="sm:hidden text-sm text-gray-700 font-medium">
+      <div className="sm:hidden text-sm text-slate-700 dark:text-slate-300 font-medium">
         {currentPage} / {totalPages}
       </div>
 
       {/* Next Page */}
-      <Link
-        href={createPageURL(currentPage + 1)}
-        className={`p-2 rounded-md border border-gray-300 bg-white text-gray-500 hover:bg-gray-50 transition-colors ${
-          currentPage >= totalPages ? 'pointer-events-none opacity-50' : ''
-        }`}
-        aria-label="Next Page"
-      >
-        <ChevronRight className="h-5 w-5" />
-      </Link>
+      {currentPage >= totalPages ? (
+        <span
+          className={disabledClass}
+          aria-disabled="true"
+          aria-label="Следваща страница"
+          tabIndex={-1}
+        >
+          <ChevronRight className="h-5 w-5" />
+        </span>
+      ) : (
+        <Link
+          href={createPageURL(currentPage + 1)}
+          className={enabledClass}
+          aria-label="Следваща страница"
+        >
+          <ChevronRight className="h-5 w-5" />
+        </Link>
+      )}
 
       {/* Last Page */}
-      <Link
-        href={createPageURL(totalPages)}
-        className={`p-2 rounded-md border border-gray-300 bg-white text-gray-500 hover:bg-gray-50 transition-colors ${
-          currentPage >= totalPages ? 'pointer-events-none opacity-50' : ''
-        }`}
-        aria-label="Last Page"
-      >
-        <ChevronsRight className="h-5 w-5" />
-      </Link>
+      {currentPage >= totalPages ? (
+        <span
+          className={disabledClass}
+          aria-disabled="true"
+          aria-label="Последна страница"
+          tabIndex={-1}
+        >
+          <ChevronsRight className="h-5 w-5" />
+        </span>
+      ) : (
+        <Link
+          href={createPageURL(totalPages)}
+          className={enabledClass}
+          aria-label="Последна страница"
+        >
+          <ChevronsRight className="h-5 w-5" />
+        </Link>
+      )}
     </div>
   )
 }

@@ -9,10 +9,10 @@ export default function ThemeToggle() {
   useEffect(() => {
     const saved = localStorage.getItem('theme')
     if (saved === 'dark') {
-      setIsDark(true)
+      setTimeout(() => setIsDark(true), 0)
       document.documentElement.classList.add('dark')
     } else if (!saved && window.matchMedia('(prefers-color-scheme: dark)').matches) {
-      setIsDark(true)
+      setTimeout(() => setIsDark(true), 0)
       document.documentElement.classList.add('dark')
     }
   }, [])
@@ -32,7 +32,7 @@ export default function ThemeToggle() {
   return (
     <button
       onClick={toggle}
-      className="p-2 rounded-lg text-white/90 hover:text-white hover:bg-white/10 transition-colors"
+      className="p-2 rounded-lg text-slate-400 hover:text-slate-700 hover:bg-slate-100 dark:text-white/50 dark:hover:text-white dark:hover:bg-white/5 transition-colors"
       title={isDark ? 'Светла тема' : 'Тъмна тема'}
     >
       {isDark ? <Sun className="h-5 w-5" /> : <Moon className="h-5 w-5" />}

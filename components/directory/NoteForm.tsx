@@ -4,23 +4,27 @@ import { useState, useRef } from 'react'
 import { createNote } from '@/app/actions/notes'
 import { Send, MessageSquare } from 'lucide-react'
 
-export default function NoteForm({ personId }: { personId: number }) {
+export default function NoteForm({ personId, onSuccess }: { personId: number; onSuccess?: () => void }) {
   const [isPending, setIsPending] = useState(false)
   const [message, setMessage] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
   const formRef = useRef<HTMLFormElement>(null)
 
-  const handleSubmit = async (formData: FormData) => {
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault()
     setIsPending(true)
     setMessage(null)
     setError(null)
 
+    const formData = new FormData(e.currentTarget)
+
     try {
       const result = await createNote(personId, { message: null, errors: {} }, formData)
-      if (result.message?.includes('success')) {
+      if (result.message?.includes('успешно')) {
         setMessage(result.message)
         formRef.current?.reset()
         setTimeout(() => setMessage(null), 3000)
+        onSuccess?.()
       } else {
         setError(result.message || 'Грешка при създаване на бележка')
       }
@@ -32,19 +36,19 @@ export default function NoteForm({ personId }: { personId: number }) {
   }
 
   return (
-    <form ref={formRef} action={handleSubmit} className="glass-card p-4">
+    <form ref={formRef} onSubmit={handleSubmit} className="glass-card p-4">
       <div className="flex items-center gap-2 mb-3">
         <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center">
           <MessageSquare className="h-4 w-4 text-white" />
         </div>
-        <h4 className="font-semibold text-slate-800">Нова бележка</h4>
+        <h4 className="text-lg font-bold text-slate-900 dark:text-slate-100">Нова бележка</h4>
       </div>
 
       <div className="relative">
         <textarea
           rows={3}
           name="content"
-          className="glass-input w-full px-4 py-3 text-slate-700 placeholder:text-slate-600 resize-none"
+          className="glass-input w-full px-4 py-3 text-base text-slate-800 dark:text-slate-100 placeholder:text-slate-500 dark:placeholder:text-slate-400 resize-none font-medium"
           placeholder="Напиши бележка..."
           required
         />
@@ -53,16 +57,16 @@ export default function NoteForm({ personId }: { personId: number }) {
       <div className="flex items-center justify-between mt-3">
         <div className="flex-1">
           {message && (
-            <span className="text-sm text-teal-600 flex items-center">
-              <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <span className="text-base font-bold text-teal-700 flex items-center">
+              <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
               </svg>
               {message}
             </span>
           )}
           {error && (
-            <span className="text-sm text-red-500 flex items-center">
-              <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <span className="text-base font-bold text-red-600 flex items-center">
+              <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
               </svg>
               {error}
@@ -84,8 +88,8 @@ export default function NoteForm({ personId }: { personId: number }) {
             </>
           ) : (
             <>
-              <Send className="h-4 w-4" />
-              <span>Добави</span>
+              <Send className="h-5 w-5" />
+              <span className="font-bold">Добави</span>
             </>
           )}
         </button>

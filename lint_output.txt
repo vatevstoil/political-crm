@@ -1,0 +1,52 @@
+
+> political-crm@0.1.0 lint
+> eslint
+
+
+J:\Antigraviti\Organization\political-crm\app\actions\tasks.ts
+    7:7   warning  'TaskSchema' is assigned a value but never used  @typescript-eslint/no-unused-vars
+  164:18  error    Unexpected any. Specify a different type         @typescript-eslint/no-explicit-any
+
+J:\Antigraviti\Organization\political-crm\app\events\page.tsx
+  25:5  error    Error: Calling setState synchronously within an effect can trigger cascading renders
+
+Effects are intended to synchronize state between React and external systems such as manually updating the DOM, state management libraries, or other platform APIs. In general, the body of an effect should do one or both of the following:
+* Update external systems with the latest state from React.
+* Subscribe for updates from some external system, calling setState in a callback function when external state changes.
+
+Calling setState synchronously within an effect body causes cascading renders that can hurt performance, and is not recommended. (https://react.dev/learn/you-might-not-need-an-effect).
+
+J:\Antigraviti\Organization\political-crm\app\events\page.tsx:25:5
+  23 |
+  24 |   useEffect(() => {
+> 25 |     loadEvents()
+     |     ^^^^^^^^^^ Avoid calling setState() directly within an effect
+  26 |   }, [])
+  27 |
+  28 |   const resetForm = () => {  react-hooks/set-state-in-effect
+  26:6  warning  React Hook useEffect has a missing dependency: 'loadEvents'. Either include it or remove the dependency array                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                       react-hooks/exhaustive-deps
+
+J:\Antigraviti\Organization\political-crm\app\groups\page.tsx
+  84:5  error  Error: Calling setState synchronously within an effect can trigger cascading renders
+
+Effects are intended to synchronize state between React and external systems such as manually updating the DOM, state management libraries, or other platform APIs. In general, the body of an effect should do one or both of the following:
+* Update external systems with the latest state from React.
+* Subscribe for updates from some external system, calling setState in a callback function when external state changes.
+
+Calling setState synchronously within an effect body causes cascading renders that can hurt performance, and is not recommended. (https://react.dev/learn/you-might-not-need-an-effect).
+
+J:\Antigraviti\Organization\political-crm\app\groups\page.tsx:84:5
+  82 |
+  83 |   useEffect(() => {
+> 84 |     loadGroups()
+     |     ^^^^^^^^^^ Avoid calling setState() directly within an effect
+  85 |     loadAllPeople()
+  86 |   }, [])
+  87 |  react-hooks/set-state-in-effect
+
+J:\Antigraviti\Organization\political-crm\cypress.config.ts
+  6:21  warning  '_on' is defined but never used      @typescript-eslint/no-unused-vars
+  6:26  warning  '_config' is defined but never used  @typescript-eslint/no-unused-vars
+
+тЬЦ 7 problems (3 errors, 4 warnings)
+

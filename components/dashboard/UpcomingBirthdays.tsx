@@ -1,12 +1,12 @@
 'use client'
 
-import { Person } from '@prisma/client'
+import { BirthdayPerson } from '@/app/actions/dashboard'
 import Link from 'next/link'
 import Image from 'next/image'
 import { Cake, User } from 'lucide-react'
 
 interface UpcomingBirthdaysProps {
-  birthdays: Person[]
+  birthdays: BirthdayPerson[]
 }
 
 export default function UpcomingBirthdays({ birthdays }: UpcomingBirthdaysProps) {
@@ -18,19 +18,19 @@ export default function UpcomingBirthdays({ birthdays }: UpcomingBirthdaysProps)
 
   if (birthdays.length === 0) {
     return (
-      <div className="bg-white rounded-lg shadow p-6">
-        <h3 className="text-lg font-medium text-gray-900 mb-4 flex items-center">
+      <div className="bg-white dark:bg-slate-800 rounded-lg shadow dark:shadow-slate-900/50 p-6 border border-transparent dark:border-slate-700">
+        <h3 className="text-xl font-semibold text-slate-900 dark:text-slate-100 mb-4 flex items-center leading-snug">
           <Cake className="h-5 w-5 mr-2 text-pink-500" />
           Предстоящи рождени дни
         </h3>
-        <p className="text-gray-500 text-sm">Няма предстоящи рождени дни</p>
+        <p className="text-slate-600 dark:text-slate-400 text-base leading-relaxed">Няма предстоящи рождени дни</p>
       </div>
     )
   }
 
   return (
-    <div className="bg-white rounded-lg shadow p-6">
-      <h3 className="text-lg font-medium text-gray-900 mb-4 flex items-center">
+    <div className="bg-white dark:bg-slate-800 rounded-lg shadow dark:shadow-slate-900/50 p-6 border border-transparent dark:border-slate-700">
+      <h3 className="text-xl font-semibold text-slate-900 dark:text-slate-100 mb-4 flex items-center leading-snug tracking-[-0.01em]">
         <Cake className="h-5 w-5 mr-2 text-pink-500" />
         Предстоящи рождени дни
       </h3>
@@ -39,7 +39,7 @@ export default function UpcomingBirthdays({ birthdays }: UpcomingBirthdaysProps)
           <li key={person.id}>
             <Link
               href={`/directory/${person.id}`}
-              className="flex items-center hover:bg-gray-50 rounded-lg p-2 -mx-2 transition-colors"
+              className="flex items-center hover:bg-slate-50 dark:hover:bg-slate-700/50 rounded-lg p-2 -mx-2 transition-colors"
             >
               <div className="flex-shrink-0 h-10 w-10 relative">
                 {person.photoUrl ? (
@@ -50,16 +50,16 @@ export default function UpcomingBirthdays({ birthdays }: UpcomingBirthdaysProps)
                     className="rounded-full object-cover"
                   />
                 ) : (
-                  <div className="h-10 w-10 rounded-full bg-gray-200 flex items-center justify-center">
-                    <User className="h-5 w-5 text-gray-400" />
+                  <div className="h-10 w-10 rounded-full bg-slate-200 dark:bg-slate-700 flex items-center justify-center">
+                    <User className="h-5 w-5 text-slate-500 dark:text-slate-400" />
                   </div>
                 )}
               </div>
               <div className="ml-3 flex-1 min-w-0">
-                <p className="text-sm font-medium text-gray-900 truncate">
+                <p className="text-base font-semibold text-slate-900 dark:text-slate-100 truncate leading-snug">
                   {person.fullName}
                 </p>
-                <p className="text-xs text-gray-500">
+                <p className="text-sm text-slate-600 dark:text-slate-400 leading-relaxed">
                   {formatBirthday(person.birthDate)}
                 </p>
               </div>
