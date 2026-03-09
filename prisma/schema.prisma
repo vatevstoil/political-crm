@@ -12,6 +12,7 @@ model Person {
   id                 Int      @id @default(autoincrement())
   membershipCardId   String?  @unique @map("membership_card_id")
   fullName           String   @map("full_name")
+  fullNameEn         String?  @map("full_name_en")  // English transliteration of the name
   photoUrl           String?  @map("photo_url")
   
   // Контакти

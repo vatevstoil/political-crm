@@ -10,6 +10,7 @@ import { buildPersonWhereClause } from '@/app/actions/shared/personFilters'
 
 const CreatePersonSchema = z.object({
   fullName: z.string().min(2, 'Името трябва да е поне 2 символа'),
+  fullNameEn: z.string().optional().or(z.literal('')),
   role: z.string().optional().or(z.literal('')),
   email: z.string().email('Невалиден имейл').optional().or(z.literal('')),
   phone: z.string().optional(),
@@ -112,6 +113,7 @@ export type PeopleWithTagsResponse = {
 function parsePersonFormData(formData: FormData) {
   return {
     fullName: formData.get('fullName'),
+    fullNameEn: formData.get('fullNameEn'),
     role: formData.get('role'),
     email: formData.get('email'),
     phone: formData.get('phone'),
@@ -218,6 +220,7 @@ export async function createPerson(
     await prisma.person.create({
       data: {
         fullName: data.fullName,
+        fullNameEn: data.fullNameEn || null,
         role: data.role || null,
         email: data.email || null,
         phone: data.phone || null,

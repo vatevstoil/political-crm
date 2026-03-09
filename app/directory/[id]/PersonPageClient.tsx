@@ -140,6 +140,25 @@ export default function PersonPageClient({ person: initialPerson, personId }: Pe
     }
   }
 
+  // Optimistic update after adding activity — Timeline shows immediately,
+  // then refreshData syncs real data from DB in the background.
+  const handleActivityAdded = (optimistic?: { type: string; content: string }) => {
+    if (optimistic) {
+      const now = new Date()
+      const tempActivity: ActivityLog = {
+        id: -Date.now(), // temporary negative ID, replaced when refreshData succeeds
+        personId,
+        type: optimistic.type,
+        content: optimistic.content,
+        date: now,
+        createdAt: now,
+        updatedAt: now,
+      }
+      setActivities(prev => [tempActivity, ...prev])
+    }
+    refreshData()
+  }
+
   const handleUpdate = async (field: string, value: string) => {
     try {
       await updateField(personId, field, value)
@@ -288,7 +307,7 @@ export default function PersonPageClient({ person: initialPerson, personId }: Pe
         personId={personId} 
         email={person.email} 
       />
-      <div className="max-w-7xl mx-auto px-3 sm:px-4 lg:px-8">
+      <div className="max-w-7xl mx-auto px-3 sm:px-4 lg:px-8" suppressHydrationWarning>
 
         <div className="mb-4 sm:mb-6">
           <BackButton href="/directory" />
@@ -322,7 +341,14 @@ export default function PersonPageClient({ person: initialPerson, personId }: Pe
                     onSave={(v) => handleUpdate('fullName', v)}
                     valueClassName="text-lg font-bold text-slate-900 dark:text-white leading-tight"
                   />
-                  <div className="flex items-center gap-1 -mt-2">
+                  <EditableField
+                    label=""
+                    value={(person as Record<string, unknown>).fullNameEn as string | null | undefined}
+                    onSave={async (v) => { await handleUpdate('fullNameEn', v) }}
+                    valueClassName="text-sm text-slate-400 dark:text-slate-500 italic leading-tight -mt-0.5"
+                    emptyLabel="English name..."
+                  />
+                  <div className="flex items-center gap-1 mt-0.5">
                     <CreditCard className="h-3 w-3 text-slate-400 dark:text-slate-500 flex-shrink-0" />
                     <EditableField
                       label=""
@@ -719,7 +745,7 @@ export default function PersonPageClient({ person: initialPerson, personId }: Pe
                 <h2 className="text-xl font-bold text-slate-800 dark:text-slate-100">Хронология</h2>
               </div>
 
-              <ActivityForm personId={person.id} onActivityAdded={refreshData} />
+              <ActivityForm personId={person.id} onActivityAdded={handleActivityAdded} />
 
               <div className="mt-4">
                 {loading ? (

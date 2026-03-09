@@ -49,10 +49,10 @@ export default function PersonForm({ initialData, backHref = '/directory' }: Per
           <h3 className="text-[18px] font-bold leading-6 text-gray-900 dark:text-slate-100 border-b dark:border-slate-700 pb-2 mb-4">Основна Информация</h3>
           <div className="grid grid-cols-1 gap-y-6 gap-x-4 sm:grid-cols-6">
             
-            {/* Full Name */}
+            {/* Full Name (Bulgarian) */}
             <div className="sm:col-span-3">
               <label htmlFor="fullName" className="block text-[14px] font-semibold text-gray-900 dark:text-slate-300">
-                Име и Фамилия <span className="text-red-500">*</span>
+                Име и Фамилия (BG) <span className="text-red-500">*</span>
               </label>
               <div className="mt-1 relative rounded-md shadow-sm">
                 <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
@@ -70,6 +70,26 @@ export default function PersonForm({ initialData, backHref = '/directory' }: Per
               {state.errors?.fullName && (
                 <p className="mt-2 text-sm text-red-600 dark:text-red-400">{state.errors.fullName.join(', ')}</p>
               )}
+            </div>
+
+            {/* Full Name (English) */}
+            <div className="sm:col-span-3">
+              <label htmlFor="fullNameEn" className="block text-[14px] font-semibold text-gray-900 dark:text-slate-300">
+                Name (EN)
+              </label>
+              <div className="mt-1 relative rounded-md shadow-sm">
+                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                  <User className="h-5 w-5 text-gray-600 dark:text-slate-400" />
+                </div>
+                <input
+                  type="text"
+                  name="fullNameEn"
+                  id="fullNameEn"
+                  defaultValue={(initialData as Record<string, unknown>)?.fullNameEn as string | undefined}
+                  className="block w-full pl-10 rounded-md border-gray-300 dark:border-slate-600 dark:bg-slate-700 shadow-sm focus:border-blue-500 focus:ring-blue-500 text-[15px] placeholder:text-gray-400 dark:placeholder-slate-400 py-2.5 border text-gray-900 dark:text-slate-100 font-medium"
+                  placeholder="Ivan Ivanov"
+                />
+              </div>
             </div>
 
             {/* Role */}

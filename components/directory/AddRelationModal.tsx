@@ -45,16 +45,15 @@ export default function AddRelationModal({ personId, existingRelatedIds, onClose
   const handleSave = async () => {
     if (!selectedPersonId) return
     setSaving(true)
-    try {
-      await addRelation(personId, selectedPersonId, type, description || null)
-      toast.success('Връзката е добавена')
-      onAdded()
-      onClose()
-    } catch {
-      toast.error('Грешка при добавяне на връзка')
-    } finally {
-      setSaving(false)
+    const result = await addRelation(personId, selectedPersonId, type, description || null)
+    setSaving(false)
+    if (!result.success) {
+      toast.error(result.error)
+      return
     }
+    toast.success('Връзката е добавена')
+    onAdded()
+    onClose()
   }
 
   return createPortal(

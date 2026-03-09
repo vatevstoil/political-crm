@@ -12,9 +12,10 @@ interface EditableFieldProps {
   options?: { value: string; label: string }[]
   type?: 'text' | 'date'
   valueClassName?: string
+  emptyLabel?: string  // custom placeholder when value is empty, default "Не е зададено"
 }
 
-export default function EditableField({ label, value, icon: Icon, onSave, options, type = 'text', valueClassName }: EditableFieldProps) {
+export default function EditableField({ label, value, icon: Icon, onSave, options, type = 'text', valueClassName, emptyLabel }: EditableFieldProps) {
   const [isEditing, setIsEditing] = useState(false)
   const [editValue, setEditValue] = useState(value || '')
   const [isSaving, setIsSaving] = useState(false)
@@ -128,7 +129,7 @@ export default function EditableField({ label, value, icon: Icon, onSave, option
                   : options?.find(o => o.value === value)?.label ?? value}
               </p>
             ) : (
-              <p className="text-sm text-slate-400 dark:text-slate-500 italic">Не е зададено</p>
+              <p className="text-sm text-slate-400 dark:text-slate-500 italic">{emptyLabel ?? 'Не е зададено'}</p>
             )}
             <Pencil className="h-3.5 w-3.5 text-slate-400 dark:text-slate-500 opacity-0 group-hover/field:opacity-100 group-focus-visible/field:opacity-100 flex-shrink-0" />
           </div>

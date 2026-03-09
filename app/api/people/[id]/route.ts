@@ -6,6 +6,7 @@ import { logFieldChanges } from '@/app/actions/changelog'
 
 const UpdatePersonSchema = z.object({
   fullName: z.string().min(2).optional(),
+  fullNameEn: z.string().optional().or(z.literal('')).or(z.null()),
   role: z.string().min(1).optional(),
   email: z.string().email().optional().or(z.literal('')).or(z.null()),
   phone: z.string().optional().or(z.null()),

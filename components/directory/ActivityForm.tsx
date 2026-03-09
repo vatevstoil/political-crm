@@ -8,7 +8,7 @@ import { toast } from 'sonner'
 
 interface ActivityFormProps {
   personId: number
-  onActivityAdded?: () => void
+  onActivityAdded?: (optimistic?: { type: string; content: string }) => void
 }
 
 const ACTIVITY_TYPES = [
@@ -52,11 +52,13 @@ export default function ActivityForm({ personId, onActivityAdded }: ActivityForm
              toast.error('Грешка: ' + res.error)
              return
           }
+          const savedType = type
+          const savedContent = content
           setContent('')
           setType('note')
           toast.success('Активността е запазена')
           if (onActivityAdded) {
-            onActivityAdded()
+            onActivityAdded({ type: savedType, content: savedContent })
           }
         }
       } catch (error) {

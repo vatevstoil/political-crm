@@ -62,6 +62,7 @@ export default function RootLayout({
     <html lang="bg" suppressHydrationWarning>
       <body
         className={`${inter.variable} font-sans antialiased bg-ocean-50`}
+        suppressHydrationWarning
       >
         <Toaster position="top-right" richColors />
         <Header />
