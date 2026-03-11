@@ -360,6 +360,12 @@ small {
   color: var(--text-secondary);
 }
 
+/* Allow explicit Tailwind color classes to override glass-panel defaults */
+.glass-panel p[class*="text-emerald"],
+.glass-card p[class*="text-emerald"] {
+  color: revert-layer;
+}
+
 .glass-card .text-slate-800,
 .glass-panel .text-slate-800 {
   color: var(--text-primary);

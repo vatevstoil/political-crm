@@ -123,7 +123,7 @@ export default function EditableField({ label, value, icon: Icon, onSave, option
             className="flex items-center gap-2 cursor-pointer hover:bg-slate-100 dark:hover:bg-slate-700/50 rounded px-1 -ml-1 py-0.5 transition-colors group/field"
           >
             {value ? (
-              <p className={valueClassName || "text-base text-slate-800 dark:text-slate-200 font-semibold break-words leading-relaxed"}>
+              <p className={valueClassName || "text-base text-emerald-700 dark:text-emerald-400 font-semibold break-words leading-relaxed"}>
                 {type === 'date'
                   ? new Date(value).toLocaleDateString('bg-BG', { day: 'numeric', month: 'long', year: 'numeric' })
                   : options?.find(o => o.value === value)?.label ?? value}
