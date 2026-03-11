@@ -27,6 +27,15 @@ if exist "prisma\dev.db" (
     echo.
 )
 
+:: === UNTRACK DATABASE (prevents git pull from deleting it) ===
+git ls-files prisma/dev.db >nul 2>&1
+if %errorlevel% == 0 (
+    echo  [i] Премахване на базата от git tracking...
+    git rm --cached prisma/dev.db >nul 2>&1
+    echo  [OK] Базата вече няма да се синхронизира с git
+    echo.
+)
+
 :: Pull latest changes
 echo  Изтегляне на промени...
 git pull
@@ -39,6 +48,19 @@ if %errorlevel% neq 0 (
 )
 
 echo.
+
+:: === RESTORE DATABASE IF DELETED BY PULL ===
+if not exist "prisma\dev.db" (
+    echo  [!] Базата данни липсва след pull — възстановяване от backup...
+    for /f "delims=" %%f in ('dir /b /o-d "prisma\backups\dev_*.db" 2^>nul') do (
+        copy /Y "prisma\backups\%%f" "prisma\dev.db" >nul
+        echo  [OK] Възстановена от: prisma\backups\%%f
+        goto :db_restored
+    )
+    echo  [!] Няма backup — ще бъде създадена нова база при migrate deploy
+    :db_restored
+    echo.
+)
 
 :: Check if package.json changed (new dependencies)
 git diff HEAD@{1} HEAD --name-only 2>nul | findstr /i "package.json" >nul
