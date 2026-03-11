@@ -28,7 +28,6 @@ import WhatsAppButton from '@/components/communication/WhatsAppButton'
 import TelegramButton from '@/components/communication/TelegramButton'
 import TagSelector from '@/components/tags/TagSelector'
 import RelationsList from '@/components/directory/RelationsList'
-import ChangeHistory from '@/components/directory/ChangeHistory'
 // EngagementStats removed per user request
 import { getCoordinatesForCity } from '@/lib/mapCoordinates'
 import { VOTING_SECTION_OPTIONS } from '@/lib/votingSections'
@@ -240,7 +239,6 @@ export default function PersonPageClient({ person: initialPerson, personId }: Pe
             ${person.birthDate ? `<div class="field"><div class="label">Роден на</div><div class="value">${new Date(person.birthDate).toLocaleDateString('bg-BG')}</div></div>` : ''}
             ${person.gender ? `<div class="field"><div class="label">Пол</div><div class="value">${person.gender === 'Male' ? 'Мъж' : person.gender === 'Female' ? 'Жена' : person.gender}</div></div>` : ''}
             ${person.profession ? `<div class="field"><div class="label">Професия</div><div class="value">${e(person.profession)}</div></div>` : ''}
-            ${person.employer ? `<div class="field"><div class="label">Работодател</div><div class="value">${e(person.employer)}</div></div>` : ''}
           </div>
 
           <div class="section">
@@ -497,7 +495,6 @@ export default function PersonPageClient({ person: initialPerson, personId }: Pe
                 Избори
               </h3>
               <EditableField label="Секция" value={person.votingSection} onSave={(v) => handleUpdate('votingSection', v)} icon={Hash} options={VOTING_SECTION_OPTIONS} />
-              <EditableField label="Мобилна Урна" value={person.votingMobile} onSave={(v) => handleUpdate('votingMobile', v)} icon={Phone} />
               <div className="flex items-center gap-3 mt-1.5 pt-1.5 border-t border-slate-100 dark:border-slate-700">
                 <div className="flex items-center gap-1.5 flex-1">
                   <Shield className="h-3.5 w-3.5 text-slate-500 dark:text-slate-400 flex-shrink-0" />
@@ -582,12 +579,10 @@ export default function PersonPageClient({ person: initialPerson, personId }: Pe
                 Образование и Работа
               </h3>
               <EditableField label="Професия" value={person.profession} onSave={(v) => handleUpdate('profession', v)} icon={Briefcase} />
-              <EditableField label="Работодател" value={person.employer} onSave={(v) => handleUpdate('employer', v)} />
               <EditableField label="Университет" value={person.university} onSave={(v) => handleUpdate('university', v)} />
               <EditableField label="Специалност" value={person.specialty} onSave={(v) => handleUpdate('specialty', v)} />
             </div>
 
-            <ChangeHistory personId={personId} />
           </div>
 
           {/* Right Column: Reminders + Timeline */}

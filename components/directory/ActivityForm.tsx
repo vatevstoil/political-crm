@@ -3,7 +3,7 @@
 import { useState, useTransition } from 'react'
 import { addActivity } from '@/app/actions/activities'
 import { createTask } from '@/app/actions/tasks'
-import { Phone, Mail, Users, StickyNote, Plus, CheckSquare } from 'lucide-react'
+import { StickyNote, Plus, CheckSquare } from 'lucide-react'
 import { toast } from 'sonner'
 
 interface ActivityFormProps {
@@ -13,9 +13,6 @@ interface ActivityFormProps {
 
 const ACTIVITY_TYPES = [
   { value: 'note', label: 'Бележка', icon: <StickyNote className="w-4 h-4" /> },
-  { value: 'call', label: 'Обаждане', icon: <Phone className="w-4 h-4" /> },
-  { value: 'email', label: 'Имейл', icon: <Mail className="w-4 h-4" /> },
-  { value: 'meeting', label: 'Среща', icon: <Users className="w-4 h-4" /> },
   { value: 'task', label: 'Задача', icon: <CheckSquare className="w-4 h-4" /> },
 ]
 
