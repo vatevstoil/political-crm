@@ -37,11 +37,11 @@ export default function ChangeHistory({ personId }: ChangeHistoryProps) {
   const displayLogs = expanded ? logs : logs.slice(0, 5)
 
   return (
-    <div className="glass-panel p-4 sm:p-5 bg-white/60 dark:bg-slate-800/60">
-      <div className="flex items-center gap-2 mb-3 pb-3 border-b border-slate-100 dark:border-slate-700">
-        <History className="h-5 w-5 text-slate-500 dark:text-slate-400" />
-        <h3 className="font-bold text-slate-800 dark:text-slate-200">История на промените</h3>
-        <span className="text-xs text-slate-400 dark:text-slate-500 ml-1">({logs.length})</span>
+    <div className="glass-panel p-3 bg-white/60 dark:bg-slate-800/60">
+      <div className="flex items-center gap-1.5 mb-1.5 pb-1.5 border-b border-slate-100 dark:border-slate-700">
+        <History className="h-3.5 w-3.5 text-slate-500 dark:text-slate-400" />
+        <h3 className="text-sm font-bold text-slate-800 dark:text-slate-200">История</h3>
+        <span className="text-xs text-slate-400 dark:text-slate-500">({logs.length})</span>
       </div>
 
       <div className="space-y-2">

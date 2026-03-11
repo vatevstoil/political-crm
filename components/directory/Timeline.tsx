@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useMemo } from 'react'
 import { Note, ActivityLog } from '@prisma/client'
 import { MessageSquare, Trash2, ClipboardList, StickyNote, Phone, Mail, Users, CheckCircle, Circle, Calendar, TrendingUp, Pencil, X, Check } from 'lucide-react'
 import { deleteNote, updateNote } from '@/app/actions/notes'
@@ -67,8 +67,8 @@ export default function Timeline({ notes, tasks, activities = [], personId, onRe
       const result = await updateNote(noteId, personId, editContent.trim())
       if (result.success) {
         toast.success('Бележката е обновена')
+        await onRefresh?.()
         setEditingId(null)
-        onRefresh?.()
       } else {
         toast.error(result.error || 'Грешка при обновяване')
       }
@@ -86,8 +86,8 @@ export default function Timeline({ notes, tasks, activities = [], personId, onRe
       const result = await updateActivity(activityId, personId, editContent.trim())
       if (result.success) {
         toast.success('Записът е обновен')
+        await onRefresh?.()
         setEditingId(null)
-        onRefresh?.()
       } else {
         toast.error(result.error || 'Грешка при обновяване')
       }
@@ -137,17 +137,23 @@ export default function Timeline({ notes, tasks, activities = [], personId, onRe
   }
 
   // Build unified timeline sorted by date (newest first)
-  const items: TimelineItem[] = [
+  const items = useMemo<TimelineItem[]>(() => [
     ...tasks.map(t => ({ kind: 'task' as const, date: new Date(t.createdAt), data: t })),
     ...activities.map(a => ({ kind: 'activity' as const, date: new Date(a.date), data: a })),
     ...notes.map(n => ({ kind: 'note' as const, date: new Date(n.createdAt), data: n })),
-  ].sort((a, b) => b.date.getTime() - a.date.getTime())
+  ].sort((a, b) => b.date.getTime() - a.date.getTime()), [tasks, activities, notes])
 
   // Task stats summary
-  const completedTasks = tasks.filter(t => t.isCompleted).length
-  const overdueTasks = tasks.filter(t => !t.isCompleted && isOverdue(t.dueDate)).length
-  const pendingTasks = tasks.length - completedTasks
-  const progress = tasks.length > 0 ? Math.round((completedTasks / tasks.length) * 100) : 0
+  const { completedTasks, overdueTasks, pendingTasks, progress } = useMemo(() => {
+    const completed = tasks.filter(t => t.isCompleted).length
+    const overdue = tasks.filter(t => !t.isCompleted && isOverdue(t.dueDate)).length
+    return {
+      completedTasks: completed,
+      overdueTasks: overdue,
+      pendingTasks: tasks.length - completed,
+      progress: tasks.length > 0 ? Math.round((completed / tasks.length) * 100) : 0,
+    }
+  }, [tasks])
 
   const getActivityIcon = (type: string) => {
     switch (type) {

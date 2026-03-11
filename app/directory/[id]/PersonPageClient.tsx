@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useMemo, useCallback } from 'react'
 import { Person, Note, ActivityLog } from '@prisma/client'
 import BackButton from '@/components/common/BackButton'
 import Link from 'next/link'
@@ -29,7 +29,7 @@ import TelegramButton from '@/components/communication/TelegramButton'
 import TagSelector from '@/components/tags/TagSelector'
 import RelationsList from '@/components/directory/RelationsList'
 import ChangeHistory from '@/components/directory/ChangeHistory'
-import EngagementStats from '@/components/directory/EngagementStats'
+// EngagementStats removed per user request
 import { getCoordinatesForCity } from '@/lib/mapCoordinates'
 import { VOTING_SECTION_OPTIONS } from '@/lib/votingSections'
 
@@ -159,16 +159,14 @@ export default function PersonPageClient({ person: initialPerson, personId }: Pe
     refreshData()
   }
 
+  const phones = useMemo(() => parsePhones(person.phone), [person.phone])
+
   const handleUpdate = async (field: string, value: string) => {
-    try {
-      await updateField(personId, field, value)
-      setPerson((prev: Person) => ({ ...prev, [field]: value }))
-      // Warn if city is not found in map lookup
-      if (field === 'city' && value && !getCoordinatesForCity(value)) {
-        toast.warning('Градът не е намерен на картата — ще бъде показан в "Други"')
-      }
-    } catch {
-      toast.error('Грешка при запазване')
+    await updateField(personId, field, value)
+    setPerson((prev: Person) => ({ ...prev, [field]: value }))
+    // Warn if city is not found in map lookup
+    if (field === 'city' && value && !getCoordinatesForCity(value)) {
+      toast.warning('Градът не е намерен на картата — ще бъде показан в "Други"')
     }
   }
 
@@ -300,7 +298,7 @@ export default function PersonPageClient({ person: initialPerson, personId }: Pe
 
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-ocean-50 via-white to-purple-50 dark:from-slate-900 dark:via-slate-900 dark:to-slate-800 py-4 sm:py-6">
+    <div className="min-h-screen bg-gradient-to-br from-ocean-50 via-white to-purple-50 dark:from-slate-900 dark:via-slate-900 dark:to-slate-800 py-2 sm:py-3">
       <EmailModal 
         isOpen={isEmailModalOpen} 
         onClose={() => setIsEmailModalOpen(false)} 
@@ -309,125 +307,81 @@ export default function PersonPageClient({ person: initialPerson, personId }: Pe
       />
       <div className="max-w-7xl mx-auto px-3 sm:px-4 lg:px-8" suppressHydrationWarning>
 
-        <div className="mb-4 sm:mb-6">
+        <div className="mb-2">
           <BackButton href="/directory" />
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-12 gap-4 sm:gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-12 gap-1.5 lg:gap-2">
 
-          <div className="md:col-span-1 lg:col-span-3 space-y-3 sm:space-y-4">
+          <div className="md:col-span-1 lg:col-span-3 space-y-1.5">
 
-            <div className="glass-panel p-4">
-              {/* Avatar + Name + Card# row */}
-              <div className="flex items-center gap-3 mb-2">
+            <div className="glass-panel p-2.5">
+              <div className="flex items-center gap-2 mb-1">
                 <div className="relative flex-shrink-0">
                   {person.photoUrl ? (
-                    <div className="h-16 w-16 rounded-full border-2 border-white/50 shadow-md relative overflow-hidden">
+                    <div className="h-12 w-12 rounded-full border-2 border-white/50 shadow-sm relative overflow-hidden">
                       <Image src={person.photoUrl} alt={person.fullName} fill className="object-cover" />
                     </div>
                   ) : (
-                    <div className="h-16 w-16 rounded-full border-2 border-white/20 shadow-md bg-gradient-to-br from-blue-400 to-purple-500 flex items-center justify-center">
-                      <Users className="h-7 w-7 text-white" />
+                    <div className="h-12 w-12 rounded-full border-2 border-white/20 shadow-sm bg-gradient-to-br from-blue-400 to-purple-500 flex items-center justify-center">
+                      <Users className="h-5 w-5 text-white" />
                     </div>
                   )}
-                  <div className={`absolute bottom-0.5 right-0.5 h-3.5 w-3.5 rounded-full border-2 border-white ${
+                  <div className={`absolute bottom-0 right-0 h-3 w-3 rounded-full border-2 border-white ${
                     person.status === 'Active' ? 'bg-teal-500' : 'bg-slate-400'
                   }`} />
                 </div>
                 <div className="flex-1 min-w-0">
-                  <EditableField
-                    label=""
-                    value={person.fullName}
-                    onSave={(v) => handleUpdate('fullName', v)}
-                    valueClassName="text-lg font-bold text-slate-900 dark:text-white leading-tight"
-                  />
-                  <EditableField
-                    label=""
-                    value={(person as Record<string, unknown>).fullNameEn as string | null | undefined}
-                    onSave={async (v) => { await handleUpdate('fullNameEn', v) }}
-                    valueClassName="text-sm text-slate-400 dark:text-slate-500 italic leading-tight -mt-0.5"
-                    emptyLabel="English name..."
-                  />
-                  <div className="flex items-center gap-1 mt-0.5">
-                    <CreditCard className="h-3 w-3 text-slate-400 dark:text-slate-500 flex-shrink-0" />
-                    <EditableField
-                      label=""
-                      value={person.membershipCardId}
-                      onSave={(v) => handleUpdate('membershipCardId', v)}
-                      valueClassName="text-sm font-semibold text-slate-500 dark:text-slate-400"
-                    />
+                  <EditableField label="" value={person.fullName} onSave={(v) => handleUpdate('fullName', v)} valueClassName="text-base font-bold text-slate-900 dark:text-white leading-tight" />
+                  <EditableField label="" value={(person as Record<string, unknown>).fullNameEn as string | null | undefined} onSave={async (v) => { await handleUpdate('fullNameEn', v) }} valueClassName="text-xs text-slate-600 dark:text-slate-300 italic leading-tight" emptyLabel="English name..." emptyClassName="text-xs text-slate-500 dark:text-slate-300 italic" />
+                  <div className="flex items-center gap-1">
+                    <CreditCard className="h-2.5 w-2.5 text-slate-400 dark:text-slate-500 flex-shrink-0" />
+                    <EditableField label="" value={person.membershipCardId} onSave={(v) => handleUpdate('membershipCardId', v)} valueClassName="text-xs font-semibold text-slate-500 dark:text-slate-400" />
                   </div>
                 </div>
               </div>
-
-              {/* Role + Status row */}
-              <div className="flex gap-4 mb-2">
-                <EditableField
-                  label="Роля"
-                  value={person.role}
-                  onSave={(v) => handleUpdate('role', v)}
-                  options={roleOptions}
-                />
-                <EditableField
-                  label="Статус"
-                  value={person.status}
-                  onSave={(v) => handleUpdate('status', v)}
-                  options={statusOptions}
-                />
+              <div className="flex gap-2 mb-1">
+                <EditableField label="Роля" value={person.role} onSave={(v) => handleUpdate('role', v)} options={roleOptions} />
+                <EditableField label="Статус" value={person.status} onSave={(v) => handleUpdate('status', v)} options={statusOptions} />
               </div>
-
-              {/* Action buttons */}
-              <div className="flex gap-2">
-                <Link
-                  href={`/directory/${person.id}/edit`}
-                  className="glass-button flex-1 py-1.5 flex items-center justify-center gap-1.5 text-xs font-medium text-slate-700 dark:text-slate-300 dark:hover:text-white"
-                >
-                  <Edit2 className="h-3.5 w-3.5" />
-                  Редактирай
+              <div className="flex gap-1">
+                <Link href={`/directory/${person.id}/edit`} className="glass-button flex-1 py-0.5 flex items-center justify-center gap-1 text-xs font-medium text-slate-700 dark:text-slate-300 dark:hover:text-white">
+                  <Edit2 className="h-3 w-3" /> Редактирай
                 </Link>
-                <button
-                  onClick={handlePrint}
-                  className="glass-button flex-1 py-1.5 flex items-center justify-center gap-1.5 text-xs font-medium text-slate-700 dark:text-slate-300 dark:hover:text-white"
-                >
-                  <Printer className="h-3.5 w-3.5" />
-                  Принтирай
+                <button onClick={handlePrint} className="glass-button flex-1 py-0.5 flex items-center justify-center gap-1 text-xs font-medium text-slate-700 dark:text-slate-300 dark:hover:text-white">
+                  <Printer className="h-3 w-3" /> Принтирай
                 </button>
               </div>
             </div>
 
-            <div className="glass-panel p-4 sm:p-5">
-              <h3 className="text-base font-bold text-slate-900 dark:text-slate-100 mb-3 flex items-center gap-2">
-                <div className="w-6 h-6 rounded-lg bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center">
-                  <Mail className="h-3.5 w-3.5 text-blue-600 dark:text-blue-400" />
-                </div>
+            <div className="glass-panel p-2.5">
+              <h3 className="text-xs font-bold text-slate-900 dark:text-slate-100 mb-1 flex items-center gap-1">
+                <Mail className="h-3 w-3 text-blue-600 dark:text-blue-400" />
                 Контакти
               </h3>
               <EditableField label="Имейл" value={person.email} onSave={(v) => handleUpdate('email', v)} icon={Mail} />
 
-              {/* Multi-phone section */}
-              <div className="mb-2">
-                <p className="text-xs font-bold text-slate-600 dark:text-slate-400 uppercase tracking-wide mb-1.5 flex items-center gap-1.5">
-                  <Phone className="h-3.5 w-3.5" />
+              <div className="mb-1">
+                <p className="text-xs font-bold text-slate-600 dark:text-slate-400 uppercase tracking-wide mb-0.5 flex items-center gap-1">
+                  <Phone className="h-3 w-3" />
                   Телефон
                 </p>
-                {parsePhones(person.phone).map((ph, idx) => (
+                {phones.map((ph, idx) => (
                   <div key={idx} className="flex items-center gap-1.5 mb-1 group/phone">
                     <EditableField
                       label=""
                       value={ph}
                       onSave={async (v) => {
-                        const phones = parsePhones(person.phone)
-                        phones[idx] = v
-                        const serialized = serializePhones(phones)
-                        await handleUpdate('phone', serialized || '')
+                        const updated = [...phones]
+                        updated[idx] = v
+                        await handleUpdate('phone', serializePhones(updated) || '')
                       }}
                     />
-                    {parsePhones(person.phone).length > 1 && (
+                    {phones.length > 1 && (
                       <button
                         onClick={() => {
-                          const phones = parsePhones(person.phone)
-                          phones.splice(idx, 1)
-                          handleUpdate('phone', serializePhones(phones) || '')
+                          const updated = phones.filter((_, i) => i !== idx)
+                          handleUpdate('phone', serializePhones(updated) || '')
                         }}
                         className="opacity-0 group-hover/phone:opacity-100 text-red-400 hover:text-red-600 transition-all p-0.5"
                         title="Премахни номер"
@@ -437,7 +391,7 @@ export default function PersonPageClient({ person: initialPerson, personId }: Pe
                     )}
                   </div>
                 ))}
-                {parsePhones(person.phone).length === 0 && (
+                {phones.length === 0 && (
                   <p className="text-sm text-slate-400 dark:text-slate-500 italic cursor-pointer hover:text-slate-600 dark:hover:text-slate-300"
                     onClick={() => handleUpdate('phone', '')}
                   >
@@ -455,9 +409,8 @@ export default function PersonPageClient({ person: initialPerson, personId }: Pe
                       className="flex-1 text-sm px-2 py-1 rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-slate-900 dark:text-slate-100 focus:ring-2 focus:ring-blue-500 outline-none"
                       onKeyDown={(e) => {
                         if (e.key === 'Enter' && newPhone.trim()) {
-                          const phones = parsePhones(person.phone)
-                          phones.push(newPhone.trim())
-                          handleUpdate('phone', serializePhones(phones) || newPhone.trim())
+                          const updated = [...phones, newPhone.trim()]
+                          handleUpdate('phone', serializePhones(updated) || newPhone.trim())
                           setNewPhone('')
                           setAddingPhone(false)
                         }
@@ -470,9 +423,8 @@ export default function PersonPageClient({ person: initialPerson, personId }: Pe
                     <button
                       onClick={() => {
                         if (newPhone.trim()) {
-                          const phones = parsePhones(person.phone)
-                          phones.push(newPhone.trim())
-                          handleUpdate('phone', serializePhones(phones) || newPhone.trim())
+                          const updated = [...phones, newPhone.trim()]
+                          handleUpdate('phone', serializePhones(updated) || newPhone.trim())
                           setNewPhone('')
                           setAddingPhone(false)
                         }
@@ -501,67 +453,24 @@ export default function PersonPageClient({ person: initialPerson, personId }: Pe
                 )}
               </div>
 
-              <div className="flex flex-wrap items-center justify-center gap-3">
+              <div className="flex flex-wrap items-center gap-1.5 mt-1">
+                  {parsePhones(person.phone)[0] && <WhatsAppButton phone={parsePhones(person.phone)[0]} name={person.fullName} />}
+                  {parsePhones(person.phone)[0] && <TelegramButton username={parsePhones(person.phone)[0]} firstName={person.fullName.split(' ')[0]} fullName={person.fullName} city={person.city || undefined} profession={person.profession || undefined} />}
                   {parsePhones(person.phone)[0] && (
-                    <WhatsAppButton phone={parsePhones(person.phone)[0]} name={person.fullName} />
-                  )}
-                  {parsePhones(person.phone)[0] && (
-                    <TelegramButton
-                      username={parsePhones(person.phone)[0]}
-                      firstName={person.fullName.split(' ')[0]}
-                      fullName={person.fullName}
-                      city={person.city || undefined}
-                      profession={person.profession || undefined}
-                    />
-                  )}
-                  {parsePhones(person.phone)[0] && (
-                    <a
-                      href={`viber://chat?number=${encodeURIComponent(parsePhones(person.phone)[0].replace(/[\s\-()]/g, ''))}`}
-                      className="inline-flex items-center justify-center p-2 rounded-lg bg-[#7360f2] hover:bg-[#5f4bd6] text-white transition-colors duration-200"
-                      title={`Viber на ${person.fullName}`}
-                    >
-                      <svg className="h-5 w-5" viewBox="0 0 24 24" fill="currentColor"><path d="M11.4 0C9.473.028 5.333.344 3.02 2.467 1.302 4.187.541 6.783.453 9.96c-.088 3.178-.198 9.135 5.637 10.705l.007.003v2.43s-.04.984.612 1.187c.764.244 1.22-.5 1.953-1.3.403-.438.957-1.08 1.376-1.573 3.793.322 6.71-.41 7.042-.523.767-.257 5.103-.806 5.808-6.583.727-5.955-.352-9.71-2.291-11.396C18.818.761 14.166-.028 11.4 0zm.597 2.127c2.384.012 6.264.625 7.8 2.07 1.58 1.395 2.407 4.656 1.794 9.67-.567 4.618-3.905 5.058-4.555 5.275-.274.094-2.735.71-5.812.543 0 0-2.302 2.782-3.022 3.51-.112.113-.243.157-.33.136-.124-.03-.158-.174-.156-.384.002-.14.01-2.476.01-2.476C2.971 19.188 2.549 14.09 2.62 11.63c.044-2.46.608-4.571 1.977-5.93 1.693-1.595 5.024-2.04 7.4-1.573zm-.207 3.468a.424.424 0 00-.42.428.424.424 0 00.42.427c1.106 0 2.096.4 2.865 1.133.77.733 1.234 1.756 1.234 2.906a.424.424 0 00.42.427.424.424 0 00.42-.427c0-1.39-.558-2.65-1.5-3.549-.942-.898-2.149-1.345-3.44-1.345zm-3.584.93c-.215-.008-.437.06-.624.212l-.006.004c-.494.414-.94.91-1.312 1.47a1.3 1.3 0 00-.182.919c.087.412.257.868.532 1.395.55 1.054 1.39 2.322 2.605 3.536 1.215 1.213 2.55 2.121 3.67 2.707.56.293 1.05.483 1.479.58a1.4 1.4 0 00.955-.168l.01-.005c.563-.37 1.06-.814 1.473-1.308l.003-.004c.35-.432.257-.955-.15-1.345l-1.8-1.616c-.38-.342-.93-.36-1.268-.043l-.707.665a.326.326 0 01-.372.06l-.017-.01c-.425-.22-1.018-.596-1.588-1.166-.57-.57-.955-1.19-1.185-1.633a.326.326 0 01.057-.377l.66-.71c.306-.345.285-.888-.043-1.268l-1.616-1.8a.95.95 0 00-.574-.295zm4.233.297a.424.424 0 00-.41.437c.032.85.392 1.63.95 2.21.558.582 1.32.958 2.157 1.003a.424.424 0 00.447-.4.424.424 0 00-.4-.453c-.593-.032-1.107-.298-1.503-.71-.396-.413-.657-.975-.68-1.602a.424.424 0 00-.437-.41z"/></svg>
+                    <a href={`viber://chat?number=${encodeURIComponent(parsePhones(person.phone)[0].replace(/[\s\-()]/g, ''))}`} className="inline-flex items-center justify-center p-1.5 rounded-lg bg-[#7360f2] hover:bg-[#5f4bd6] text-white transition-colors" title={`Viber`}>
+                      <svg className="h-4 w-4" viewBox="0 0 24 24" fill="currentColor"><path d="M11.4 0C9.473.028 5.333.344 3.02 2.467 1.302 4.187.541 6.783.453 9.96c-.088 3.178-.198 9.135 5.637 10.705l.007.003v2.43s-.04.984.612 1.187c.764.244 1.22-.5 1.953-1.3.403-.438.957-1.08 1.376-1.573 3.793.322 6.71-.41 7.042-.523.767-.257 5.103-.806 5.808-6.583.727-5.955-.352-9.71-2.291-11.396C18.818.761 14.166-.028 11.4 0zm.597 2.127c2.384.012 6.264.625 7.8 2.07 1.58 1.395 2.407 4.656 1.794 9.67-.567 4.618-3.905 5.058-4.555 5.275-.274.094-2.735.71-5.812.543 0 0-2.302 2.782-3.022 3.51-.112.113-.243.157-.33.136-.124-.03-.158-.174-.156-.384.002-.14.01-2.476.01-2.476C2.971 19.188 2.549 14.09 2.62 11.63c.044-2.46.608-4.571 1.977-5.93 1.693-1.595 5.024-2.04 7.4-1.573zm-.207 3.468a.424.424 0 00-.42.428.424.424 0 00.42.427c1.106 0 2.096.4 2.865 1.133.77.733 1.234 1.756 1.234 2.906a.424.424 0 00.42.427.424.424 0 00.42-.427c0-1.39-.558-2.65-1.5-3.549-.942-.898-2.149-1.345-3.44-1.345zm-3.584.93c-.215-.008-.437.06-.624.212l-.006.004c-.494.414-.94.91-1.312 1.47a1.3 1.3 0 00-.182.919c.087.412.257.868.532 1.395.55 1.054 1.39 2.322 2.605 3.536 1.215 1.213 2.55 2.121 3.67 2.707.56.293 1.05.483 1.479.58a1.4 1.4 0 00.955-.168l.01-.005c.563-.37 1.06-.814 1.473-1.308l.003-.004c.35-.432.257-.955-.15-1.345l-1.8-1.616c-.38-.342-.93-.36-1.268-.043l-.707.665a.326.326 0 01-.372.06l-.017-.01c-.425-.22-1.018-.596-1.588-1.166-.57-.57-.955-1.19-1.185-1.633a.326.326 0 01.057-.377l.66-.71c.306-.345.285-.888-.043-1.268l-1.616-1.8a.95.95 0 00-.574-.295zm4.233.297a.424.424 0 00-.41.437c.032.85.392 1.63.95 2.21.558.582 1.32.958 2.157 1.003a.424.424 0 00.447-.4.424.424 0 00-.4-.453c-.593-.032-1.107-.298-1.503-.71-.396-.413-.657-.975-.68-1.602a.424.424 0 00-.437-.41z"/></svg>
                     </a>
                   )}
-                  <button
-                    onClick={() => setIsEmailModalOpen(true)}
-                    className="h-10 w-10 rounded-full bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 flex items-center justify-center hover:bg-blue-100 dark:hover:bg-blue-900/50 transition-colors tooltip" title="Имейл"
-                  >
-                    <Mail className="h-5 w-5" />
+                  <button onClick={() => setIsEmailModalOpen(true)} className="h-8 w-8 rounded-lg bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 flex items-center justify-center hover:bg-blue-100 dark:hover:bg-blue-900/50 transition-colors" title="Имейл">
+                    <Mail className="h-4 w-4" />
                   </button>
-                  <button className="h-10 w-10 rounded-full bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 flex items-center justify-center hover:bg-blue-100 dark:hover:bg-blue-900/50 transition-colors tooltip" title="Среща">
-                    <Users className="h-5 w-5" />
-                  </button>
+                  {(person.socialFb || person.socialInstagram || person.socialLinkedin) && <>
+                    {person.socialFb && <a href={person.socialFb} target="_blank" rel="noopener noreferrer" title="Facebook" className="h-8 w-8 rounded-lg bg-blue-50 dark:bg-blue-900/30 flex items-center justify-center hover:bg-blue-100 dark:hover:bg-blue-900/50 transition-colors"><Facebook className="h-4 w-4 text-blue-600 dark:text-blue-400" /></a>}
+                    {person.socialInstagram && <a href={person.socialInstagram} target="_blank" rel="noopener noreferrer" title="Instagram" className="h-8 w-8 rounded-lg bg-pink-50 dark:bg-pink-900/30 flex items-center justify-center hover:bg-pink-100 dark:hover:bg-pink-900/50 transition-colors"><Instagram className="h-4 w-4 text-pink-600 dark:text-pink-400" /></a>}
+                    {person.socialLinkedin && <a href={person.socialLinkedin} target="_blank" rel="noopener noreferrer" title="LinkedIn" className="h-8 w-8 rounded-lg bg-blue-50 dark:bg-blue-900/30 flex items-center justify-center hover:bg-blue-100 dark:hover:bg-blue-900/50 transition-colors"><Linkedin className="h-4 w-4 text-blue-700 dark:text-blue-400" /></a>}
+                  </>}
               </div>
-
-              {(person.socialFb || person.socialInstagram || person.socialLinkedin) && (
-                <div className="mt-4 pt-4 border-t border-slate-200 dark:border-slate-700">
-                  <p className="text-xs text-slate-600 dark:text-slate-400 uppercase tracking-wide font-semibold mb-3">Социални Мрежи</p>
-                  <div className="flex space-x-3">
-                    {person.socialFb && (
-                      <a href={person.socialFb} target="_blank" rel="noopener noreferrer" title="Facebook"
-                         className="w-9 h-9 rounded-lg bg-blue-50 dark:bg-blue-900/30 flex items-center justify-center hover:bg-blue-100 dark:hover:bg-blue-900/50 transition-colors">
-                        <Facebook className="h-4 w-4 text-blue-600 dark:text-blue-400" />
-                      </a>
-                    )}
-                    {person.socialInstagram && (
-                      <a href={person.socialInstagram} target="_blank" rel="noopener noreferrer" title="Instagram"
-                         className="w-9 h-9 rounded-lg bg-pink-50 dark:bg-pink-900/30 flex items-center justify-center hover:bg-pink-100 dark:hover:bg-pink-900/50 transition-colors">
-                        <Instagram className="h-4 w-4 text-pink-600 dark:text-pink-400" />
-                      </a>
-                    )}
-                    {person.socialLinkedin && (
-                      <a href={person.socialLinkedin} target="_blank" rel="noopener noreferrer" title="LinkedIn"
-                         className="w-9 h-9 rounded-lg bg-blue-50 dark:bg-blue-900/30 flex items-center justify-center hover:bg-blue-100 dark:hover:bg-blue-900/50 transition-colors">
-                        <Linkedin className="h-4 w-4 text-blue-700 dark:text-blue-400" />
-                      </a>
-                    )}
-                  </div>
-                </div>
-              )}
             </div>
-
-            <EngagementStats personId={personId} />
 
             <TagSelector personId={personId} />
 
@@ -570,13 +479,11 @@ export default function PersonPageClient({ person: initialPerson, personId }: Pe
           </div>
 
           {/* Middle Column: Location, Elections, Personal Data, Education, History */}
-          <div className="md:col-span-1 lg:col-span-3 space-y-4 sm:space-y-5">
+          <div className="md:col-span-1 lg:col-span-3 space-y-1.5">
 
-            <div className="glass-panel p-4 sm:p-5">
-              <h3 className="text-base font-bold text-slate-900 dark:text-slate-100 mb-3 flex items-center gap-2">
-                <div className="w-6 h-6 rounded-lg bg-purple-100 dark:bg-purple-900/30 flex items-center justify-center">
-                  <MapPin className="h-3.5 w-3.5 text-purple-600 dark:text-purple-400" />
-                </div>
+            <div className="glass-panel p-2.5">
+              <h3 className="text-xs font-bold text-slate-900 dark:text-slate-100 mb-1 flex items-center gap-1">
+                <MapPin className="h-3 w-3 text-purple-600 dark:text-purple-400" />
                 Локация
               </h3>
               <EditableField label="Област" value={person.region} onSave={(v) => handleUpdate('region', v)} icon={Map} />
@@ -584,82 +491,54 @@ export default function PersonPageClient({ person: initialPerson, personId }: Pe
               <EditableField label="Адрес" value={person.address} onSave={(v) => handleUpdate('address', v)} />
             </div>
 
-            <div className="glass-panel p-4 sm:p-5">
-              <h3 className="text-base font-bold text-slate-900 dark:text-slate-100 mb-3 flex items-center gap-2">
-                <div className="w-6 h-6 rounded-lg bg-teal-100 dark:bg-teal-900/30 flex items-center justify-center">
-                  <Hash className="h-3.5 w-3.5 text-teal-600 dark:text-teal-400" />
-                </div>
+            <div className="glass-panel p-2.5">
+              <h3 className="text-xs font-bold text-slate-900 dark:text-slate-100 mb-1 flex items-center gap-1">
+                <Hash className="h-3 w-3 text-teal-600 dark:text-teal-400" />
                 Избори
               </h3>
               <EditableField label="Секция" value={person.votingSection} onSave={(v) => handleUpdate('votingSection', v)} icon={Hash} options={VOTING_SECTION_OPTIONS} />
               <EditableField label="Мобилна Урна" value={person.votingMobile} onSave={(v) => handleUpdate('votingMobile', v)} icon={Phone} />
-              <div className="flex items-center gap-2 mt-3 pt-3 border-t border-slate-100 dark:border-slate-700">
-                <Shield className="h-4 w-4 text-slate-500 dark:text-slate-400 flex-shrink-0" />
-                <div className="flex-1">
-                  <p className="text-sm font-bold text-slate-700 dark:text-slate-400 uppercase tracking-wide mb-0.5">Застъпник</p>
-                  <div className="flex items-center gap-3">
-                    <button
-                      onClick={() => handleBooleanUpdate('isRepresentative', !person.isRepresentative)}
-                      className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
-                        person.isRepresentative
-                          ? 'bg-teal-500'
-                          : 'bg-slate-300 dark:bg-slate-600'
-                      }`}
-                      role="switch"
-                      aria-checked={person.isRepresentative}
-                      aria-label="Застъпник в секция"
-                    >
-                      <span className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
-                        person.isRepresentative ? 'translate-x-6' : 'translate-x-1'
-                      }`} />
-                    </button>
-                    <span className={`text-sm font-semibold ${
-                      person.isRepresentative
-                        ? 'text-teal-700 dark:text-teal-400'
-                        : 'text-slate-500 dark:text-slate-400'
-                    }`}>
-                      {person.isRepresentative ? 'Да — застъпник' : 'Не'}
-                    </span>
-                  </div>
+              <div className="flex items-center gap-3 mt-1.5 pt-1.5 border-t border-slate-100 dark:border-slate-700">
+                <div className="flex items-center gap-1.5 flex-1">
+                  <Shield className="h-3.5 w-3.5 text-slate-500 dark:text-slate-400 flex-shrink-0" />
+                  <span className="text-xs font-bold text-slate-700 dark:text-slate-400 uppercase">Застъпник</span>
+                  <button
+                    onClick={() => handleBooleanUpdate('isRepresentative', !person.isRepresentative)}
+                    className={`relative inline-flex h-5 w-9 items-center rounded-full transition-colors ${
+                      person.isRepresentative ? 'bg-teal-500' : 'bg-slate-300 dark:bg-slate-600'
+                    }`}
+                    role="switch"
+                    aria-checked={person.isRepresentative}
+                    aria-label="Застъпник в секция"
+                  >
+                    <span className={`inline-block h-3.5 w-3.5 transform rounded-full bg-white transition-transform ${
+                      person.isRepresentative ? 'translate-x-4' : 'translate-x-0.5'
+                    }`} />
+                  </button>
                 </div>
-              </div>
-              <div className="flex items-center gap-2 mt-3 pt-3 border-t border-slate-100 dark:border-slate-700">
-                <UserCheck className="h-4 w-4 text-slate-500 dark:text-slate-400 flex-shrink-0" />
-                <div className="flex-1">
-                  <p className="text-sm font-bold text-slate-700 dark:text-slate-400 uppercase tracking-wide mb-0.5">Член на СИК</p>
-                  <div className="flex items-center gap-3">
-                    <button
-                      onClick={() => handleBooleanUpdate('isCommissionMember', !person.isCommissionMember)}
-                      className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
-                        person.isCommissionMember
-                          ? 'bg-indigo-500'
-                          : 'bg-slate-300 dark:bg-slate-600'
-                      }`}
-                      role="switch"
-                      aria-checked={person.isCommissionMember}
-                      aria-label="Член на секционна избирателна комисия"
-                    >
-                      <span className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
-                        person.isCommissionMember ? 'translate-x-6' : 'translate-x-1'
-                      }`} />
-                    </button>
-                    <span className={`text-sm font-semibold ${
-                      person.isCommissionMember
-                        ? 'text-indigo-700 dark:text-indigo-400'
-                        : 'text-slate-500 dark:text-slate-400'
-                    }`}>
-                      {person.isCommissionMember ? 'Да — член на СИК' : 'Не'}
-                    </span>
-                  </div>
+                <div className="flex items-center gap-1.5 flex-1">
+                  <UserCheck className="h-3.5 w-3.5 text-slate-500 dark:text-slate-400 flex-shrink-0" />
+                  <span className="text-xs font-bold text-slate-700 dark:text-slate-400 uppercase">СИК</span>
+                  <button
+                    onClick={() => handleBooleanUpdate('isCommissionMember', !person.isCommissionMember)}
+                    className={`relative inline-flex h-5 w-9 items-center rounded-full transition-colors ${
+                      person.isCommissionMember ? 'bg-indigo-500' : 'bg-slate-300 dark:bg-slate-600'
+                    }`}
+                    role="switch"
+                    aria-checked={person.isCommissionMember}
+                    aria-label="Член на секционна избирателна комисия"
+                  >
+                    <span className={`inline-block h-3.5 w-3.5 transform rounded-full bg-white transition-transform ${
+                      person.isCommissionMember ? 'translate-x-4' : 'translate-x-0.5'
+                    }`} />
+                  </button>
                 </div>
               </div>
             </div>
 
-            <div className="glass-panel p-4 sm:p-5">
-              <h3 className="text-base font-bold text-slate-900 dark:text-slate-100 mb-3 flex items-center gap-2">
-                <div className="w-6 h-6 rounded-lg bg-amber-100 dark:bg-amber-900/30 flex items-center justify-center">
-                  <Calendar className="h-3.5 w-3.5 text-amber-600 dark:text-amber-400" />
-                </div>
+            <div className="glass-panel p-2.5">
+              <h3 className="text-xs font-bold text-slate-900 dark:text-slate-100 mb-1 flex items-center gap-1">
+                <Calendar className="h-3 w-3 text-amber-600 dark:text-amber-400" />
                 Лични Данни
               </h3>
               <EditableField
@@ -688,8 +567,8 @@ export default function PersonPageClient({ person: initialPerson, personId }: Pe
                 options={genderOptions}
               />
               {person.pensioner && (
-                <div className="flex items-center space-x-2 mt-2">
-                  <span className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-400">
+                <div className="flex items-center mt-0.5">
+                  <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-400">
                     Пенсионер
                   </span>
                 </div>
@@ -697,11 +576,9 @@ export default function PersonPageClient({ person: initialPerson, personId }: Pe
               <EditableField label="ТЕЛК / Увреждане" value={person.disability} onSave={(v) => handleUpdate('disability', v)} />
             </div>
 
-            <div className="glass-panel p-4 sm:p-5">
-              <h3 className="text-base font-bold text-slate-900 dark:text-slate-100 mb-3 flex items-center gap-2">
-                <div className="w-6 h-6 rounded-lg bg-emerald-100 dark:bg-emerald-900/30 flex items-center justify-center">
-                  <Briefcase className="h-3.5 w-3.5 text-emerald-600 dark:text-emerald-400" />
-                </div>
+            <div className="glass-panel p-2.5">
+              <h3 className="text-xs font-bold text-slate-900 dark:text-slate-100 mb-1 flex items-center gap-1">
+                <Briefcase className="h-3 w-3 text-emerald-600 dark:text-emerald-400" />
                 Образование и Работа
               </h3>
               <EditableField label="Професия" value={person.profession} onSave={(v) => handleUpdate('profession', v)} icon={Briefcase} />
@@ -714,42 +591,38 @@ export default function PersonPageClient({ person: initialPerson, personId }: Pe
           </div>
 
           {/* Right Column: Reminders + Timeline */}
-          <div className="md:col-span-2 lg:col-span-6 space-y-4 sm:space-y-6">
+          <div className="md:col-span-2 lg:col-span-6 space-y-1.5">
 
             {/* Reminders Section */}
             {!loading && (
-              <div className="glass-panel p-4 sm:p-6 bg-white/60 dark:bg-slate-800/60">
-                <div className="flex items-center gap-2 mb-4 pb-3 border-b border-slate-100 dark:border-slate-700">
-                  <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-amber-400 to-orange-500 flex items-center justify-center text-white">
-                    <Bell className="h-4 w-4" />
-                  </div>
-                  <h2 className="text-xl font-bold text-slate-800 dark:text-slate-100">Напомняния</h2>
+              <div className="glass-panel p-2.5 bg-white/60 dark:bg-slate-800/60">
+                <div className="flex items-center gap-1.5 mb-1.5 pb-1 border-b border-slate-100 dark:border-slate-700">
+                  <Bell className="h-4 w-4 text-amber-500" />
+                  <h2 className="text-xs font-bold text-slate-800 dark:text-slate-100">Напомняния</h2>
                   {reminders.filter(r => !r.isCompleted).length > 0 && (
-                    <span className="ml-2 text-xs font-bold text-amber-700 dark:text-amber-400 bg-amber-100 dark:bg-amber-900/30 px-2 py-0.5 rounded-full">
-                      {reminders.filter(r => !r.isCompleted).length} активни
+                    <span className="text-xs font-bold text-amber-700 dark:text-amber-400 bg-amber-100 dark:bg-amber-900/30 px-1.5 py-0.5 rounded-full">
+                      {reminders.filter(r => !r.isCompleted).length}
                     </span>
                   )}
                 </div>
                 <ReminderList reminders={reminders} personId={person.id} onChanged={refreshData} />
-                <div className="mt-3">
+                <div className="mt-2">
                   <ReminderForm personId={person.id} onCreated={refreshData} />
                 </div>
               </div>
             )}
 
-            <div className="glass-panel p-4 sm:p-6 bg-white/60 dark:bg-slate-800/60">
-              <div className="flex items-center gap-2 mb-4 sm:mb-6 pb-3 sm:pb-4 border-b border-slate-100 dark:border-slate-700">
-                <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center text-white">
-                  <Activity className="h-4 w-4" />
-                </div>
-                <h2 className="text-xl font-bold text-slate-800 dark:text-slate-100">Хронология</h2>
+            <div className="glass-panel p-2.5 bg-white/60 dark:bg-slate-800/60">
+              <div className="flex items-center gap-1.5 mb-1.5 pb-1 border-b border-slate-100 dark:border-slate-700">
+                <Activity className="h-4 w-4 text-blue-500" />
+                <h2 className="text-xs font-bold text-slate-800 dark:text-slate-100">Хронология</h2>
               </div>
 
               <ActivityForm personId={person.id} onActivityAdded={handleActivityAdded} />
 
-              <div className="mt-4">
+              <div className="mt-2">
                 {loading ? (
-                  <div className="text-center py-8 text-slate-500 dark:text-slate-400">Зареждане...</div>
+                  <div className="text-center py-4 text-slate-500 dark:text-slate-400">Зареждане...</div>
                 ) : (
                   <Timeline notes={notes} tasks={tasks} activities={activities} personId={person.id} onRefresh={refreshData} />
                 )}

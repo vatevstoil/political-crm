@@ -244,23 +244,29 @@ async function getDashboardStatsInternal(): Promise<DashboardStats> {
 }
 
 async function getTaskStatsInternal() {
-  const [total, completed, pending, overdue, low, medium, high] = await Promise.all([
-    prisma.task.count(),
-    prisma.task.count({ where: { isCompleted: true } }),
-    prisma.task.count({ where: { isCompleted: false } }),
-    prisma.task.count({ where: { isCompleted: false, dueDate: { lt: new Date(new Date().setHours(0, 0, 0, 0)) } } }),
-    prisma.task.count({ where: { priority: 'low' } }),
-    prisma.task.count({ where: { priority: 'medium' } }),
-    prisma.task.count({ where: { priority: 'high' } }),
+  const today = new Date(new Date().setHours(0, 0, 0, 0))
+
+  const [groups, overdueCount] = await Promise.all([
+    prisma.task.groupBy({
+      by: ['priority', 'isCompleted'],
+      _count: true,
+    }),
+    prisma.task.count({ where: { isCompleted: false, dueDate: { lt: today } } }),
   ])
 
-  return {
-    total,
-    completed,
-    pending,
-    overdue,
-    byPriority: { low, medium, high }
+  let total = 0, completed = 0, pending = 0
+  const byPriority = { low: 0, medium: 0, high: 0 }
+
+  for (const g of groups) {
+    total += g._count
+    if (g.isCompleted) completed += g._count
+    else pending += g._count
+    if (g.priority in byPriority) {
+      byPriority[g.priority as keyof typeof byPriority] += g._count
+    }
   }
+
+  return { total, completed, pending, overdue: overdueCount, byPriority }
 }
 
 function getUpcomingBirthdays(people: { id: number; fullName: string; birthDate: Date | null; photoUrl: string | null }[]): BirthdayPerson[] {
@@ -290,47 +296,51 @@ function getUpcomingBirthdays(people: { id: number; fullName: string; birthDate:
 }
 
 async function getStatusDistributionInternal() {
-  const [active, inactive, excluded, lead, prospect] = await Promise.all([
-    prisma.person.count({ where: { status: 'Active' } }),
-    prisma.person.count({ where: { status: 'Inactive' } }),
-    prisma.person.count({ where: { status: 'Excluded' } }),
-    prisma.person.count({ where: { status: 'Lead' } }),
-    prisma.person.count({ where: { status: 'Prospect' } }),
-  ])
-  return [
-    { status: 'Активен', count: active },
-    { status: 'Неактивен', count: inactive },
-    { status: 'Изключен', count: excluded },
-    { status: 'Потенциален', count: lead },
-    { status: 'Перспективен', count: prospect },
-  ]
+  const groups = await prisma.person.groupBy({
+    by: ['status'],
+    _count: true,
+  })
+
+  const statusMap: Record<string, number> = {}
+  for (const g of groups) {
+    if (g.status) statusMap[g.status] = g._count
+  }
+
+  const labels: Record<string, string> = {
+    'Active': 'Активен', 'Inactive': 'Неактивен', 'Excluded': 'Изключен',
+    'Lead': 'Потенциален', 'Prospect': 'Перспективен',
+  }
+
+  return Object.entries(labels).map(([key, label]) => ({
+    status: label,
+    count: statusMap[key] || 0,
+  }))
 }
 
 async function getMembershipGrowthInternal() {
   const now = new Date()
+  const twelveMonthsAgo = new Date(now.getFullYear(), now.getMonth() - 11, 1)
 
-  const monthRanges = Array.from({ length: 12 }, (_, idx) => {
-    const i = 11 - idx
-    const date = new Date(now.getFullYear(), now.getMonth() - i, 1)
-    const nextMonth = new Date(date.getFullYear(), date.getMonth() + 1, 1)
-    const label = date.toLocaleDateString('bg-BG', { month: 'short', year: '2-digit' })
-    return { date, nextMonth, label }
+  // Single query instead of 12 separate counts
+  const people = await prisma.person.findMany({
+    where: { createdAt: { gte: twelveMonthsAgo } },
+    select: { createdAt: true },
   })
 
-  const counts = await Promise.all(
-    monthRanges.map(({ date, nextMonth }) =>
-      prisma.person.count({
-        where: {
-          createdAt: { gte: date, lt: nextMonth },
-        },
-      })
-    )
-  )
+  const monthCounts = new Map<string, number>()
+  for (const p of people) {
+    const d = new Date(p.createdAt)
+    const key = `${d.getFullYear()}-${d.getMonth()}`
+    monthCounts.set(key, (monthCounts.get(key) || 0) + 1)
+  }
 
-  return monthRanges.map((range, idx) => ({
-    month: range.label,
-    count: counts[idx],
-  }))
+  return Array.from({ length: 12 }, (_, idx) => {
+    const i = 11 - idx
+    const date = new Date(now.getFullYear(), now.getMonth() - i, 1)
+    const key = `${date.getFullYear()}-${date.getMonth()}`
+    const label = date.toLocaleDateString('bg-BG', { month: 'short', year: '2-digit' })
+    return { month: label, count: monthCounts.get(key) || 0 }
+  })
 }
 
 function calculateAgeGroups(people: { birthDate: Date | null }[]) {

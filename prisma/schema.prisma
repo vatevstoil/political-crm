@@ -50,6 +50,7 @@ model Person {
   employer           String?   @map("employer")        // Работодател
   university         String?   @map("university")      // Университет
   specialty          String?   @map("specialty")       // Специалност
+  highlightColor     String?   @map("highlight_color") // Color marking for directory list (e.g. #ef4444)
   
   // Relations
   notes              Note[]

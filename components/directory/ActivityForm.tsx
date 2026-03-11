@@ -69,15 +69,15 @@ export default function ActivityForm({ personId, onActivityAdded }: ActivityForm
   }
 
   return (
-    <form onSubmit={handleSubmit} className="bg-white dark:bg-slate-800 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-700 p-4 mb-6">
-      <div className="flex flex-wrap gap-2 mb-3">
+    <form onSubmit={handleSubmit} className="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 p-2.5 mb-2">
+      <div className="flex flex-wrap gap-1.5 mb-2">
         {ACTIVITY_TYPES.map(t => (
           <button
             key={t.value}
             type="button"
             aria-pressed={type === t.value}
             onClick={() => setType(t.value)}
-            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm font-medium transition-colors ${
+            className={`flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-medium transition-colors ${
               type === t.value
                 ? 'bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400 border border-blue-200 dark:border-blue-700'
                 : 'bg-slate-50 dark:bg-slate-700 text-slate-500 dark:text-slate-400 border border-slate-200 dark:border-slate-600 hover:bg-slate-100 dark:hover:bg-slate-600'
@@ -88,23 +88,23 @@ export default function ActivityForm({ personId, onActivityAdded }: ActivityForm
           </button>
         ))}
       </div>
-      <div className="relative">
+      <div className="relative" suppressHydrationWarning>
         <textarea
           value={content}
           onChange={(e) => setContent(e.target.value)}
           placeholder={`Въведете детайли за ${ACTIVITY_TYPES.find(t => t.value === type)?.label.toLowerCase()}...`}
-          className="w-full min-h-[100px] p-3 pr-12 bg-slate-50 dark:bg-slate-700 border border-slate-200 dark:border-slate-600 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:bg-white dark:focus:bg-slate-600 transition-all resize-none text-slate-700 dark:text-slate-200 dark:placeholder:text-slate-400"
+          className="w-full min-h-[60px] p-2.5 pr-10 bg-slate-50 dark:bg-slate-700 border border-slate-200 dark:border-slate-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:bg-white dark:focus:bg-slate-600 transition-all resize-none text-sm text-slate-700 dark:text-slate-200 dark:placeholder:text-slate-400"
         />
         <button
           type="submit"
           disabled={!content.trim() || isPending}
-          className="absolute right-3 bottom-3 w-8 h-8 bg-blue-600 text-white rounded-lg flex items-center justify-center hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed shadow-sm"
+          className="absolute right-2 bottom-2 w-7 h-7 bg-blue-600 text-white rounded-md flex items-center justify-center hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed shadow-sm"
           title="Запази"
         >
           {isPending ? (
-            <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+            <div className="w-3.5 h-3.5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
           ) : (
-            <Plus className="h-5 w-5" />
+            <Plus className="h-4 w-4" />
           )}
         </button>
       </div>

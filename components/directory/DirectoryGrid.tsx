@@ -45,6 +45,22 @@ export default function DirectoryGrid({ people, onSelectionChange, isLoading: is
   const searchParams = useSearchParams()
   const pathname = usePathname()
 
+  // Restore saved sort from localStorage on mount (if no sort in URL)
+  useEffect(() => {
+    if (typeof window === 'undefined') return
+    const params = new URLSearchParams(searchParams)
+    if (!params.has('sortBy')) {
+      const savedSort = localStorage.getItem('directorySortBy')
+      const savedOrder = localStorage.getItem('directorySortOrder')
+      if (savedSort) {
+        params.set('sortBy', savedSort)
+        params.set('sortOrder', savedOrder || 'asc')
+        router.replace(`${pathname}?${params.toString()}`)
+      }
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
+
   const handleSort = (field: string) => {
     const params = new URLSearchParams(searchParams)
     if (sortBy === field) {
@@ -52,13 +68,19 @@ export default function DirectoryGrid({ people, onSelectionChange, isLoading: is
       if (sortOrder === 'asc') {
         params.set('sortBy', field)
         params.set('sortOrder', 'desc')
+        localStorage.setItem('directorySortBy', field)
+        localStorage.setItem('directorySortOrder', 'desc')
       } else {
         params.delete('sortBy')
         params.delete('sortOrder')
+        localStorage.removeItem('directorySortBy')
+        localStorage.removeItem('directorySortOrder')
       }
     } else {
       params.set('sortBy', field)
       params.set('sortOrder', 'asc')
+      localStorage.setItem('directorySortBy', field)
+      localStorage.setItem('directorySortOrder', 'asc')
     }
     params.set('page', '1')
     router.push(`${pathname}?${params.toString()}`)
@@ -68,6 +90,38 @@ export default function DirectoryGrid({ people, onSelectionChange, isLoading: is
     if (sortBy !== field) return <ArrowUpDown className="h-3 w-3 opacity-0 group-hover/th:opacity-50 transition-opacity" />
     if (sortOrder === 'asc') return <ArrowUp className="h-3 w-3 text-blue-500" />
     return <ArrowDown className="h-3 w-3 text-blue-500" />
+  }
+
+  const HIGHLIGHT_COLORS = [
+    { value: '#ef4444', label: 'Червен' },
+    { value: '#f97316', label: 'Оранжев' },
+    { value: '#eab308', label: 'Жълт' },
+    { value: '#22c55e', label: 'Зелен' },
+    { value: '#3b82f6', label: 'Син' },
+    { value: '#8b5cf6', label: 'Лилав' },
+    { value: '#ec4899', label: 'Розов' },
+  ]
+
+  const [colorPickerFor, setColorPickerFor] = useState<number | null>(null)
+  const [localHighlights, setLocalHighlights] = useState<Record<number, string | null>>({})
+
+  const updateHighlight = async (personId: number, color: string | null) => {
+    setLocalHighlights(prev => ({ ...prev, [personId]: color }))
+    setColorPickerFor(null)
+    try {
+      await fetch(`/api/people/${personId}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ highlightColor: color || '' }),
+      })
+    } catch {
+      toast.error('Грешка при маркиране')
+    }
+  }
+
+  const getHighlight = (person: PersonWithTags): string | null => {
+    if (person.id in localHighlights) return localHighlights[person.id]
+    return (person as Record<string, unknown>).highlightColor as string | null
   }
 
   const [showStatusMenu, setShowStatusMenu] = useState(false)
@@ -84,6 +138,7 @@ export default function DirectoryGrid({ people, onSelectionChange, isLoading: is
         setShowStatusMenu(false)
         setShowGroupMenu(false)
         setShowRemoveGroupMenu(false)
+        setColorPickerFor(null)
       }
     }
     document.addEventListener('keydown', handleEscape)
@@ -97,6 +152,9 @@ export default function DirectoryGrid({ people, onSelectionChange, isLoading: is
         setShowStatusMenu(false)
         setShowGroupMenu(false)
         setShowRemoveGroupMenu(false)
+      }
+      if (!target.closest('.color-picker-wrapper')) {
+        setColorPickerFor(null)
       }
     }
     document.addEventListener('mousedown', handleClickOutside)
@@ -283,7 +341,13 @@ export default function DirectoryGrid({ people, onSelectionChange, isLoading: is
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
           {people.map((person) => (
             <div key={person.id} className="relative">
-              <div className="absolute top-4 left-4 z-10">
+              {getHighlight(person) && (
+                <div
+                  className="absolute top-0 left-0 right-0 h-1 rounded-t-2xl z-[5]"
+                  style={{ backgroundColor: getHighlight(person)! }}
+                />
+              )}
+              <div className="absolute top-4 left-4 z-10 flex items-center gap-2">
                 <input
                   type="checkbox"
                   checked={selectedIds.has(person.id)}
@@ -291,6 +355,34 @@ export default function DirectoryGrid({ people, onSelectionChange, isLoading: is
                   className="w-5 h-5 rounded border-slate-300 text-blue-600 focus:ring-blue-500 cursor-pointer"
                   title={`Селектирай ${person.fullName}`}
                 />
+                <div className="color-picker-wrapper relative">
+                  <button
+                    onClick={(e) => { e.stopPropagation(); setColorPickerFor(colorPickerFor === person.id ? null : person.id) }}
+                    className="w-3.5 h-3.5 rounded-full border border-white/70 shadow-sm hover:scale-125 transition-transform"
+                    style={{ backgroundColor: getHighlight(person) || '#cbd5e1' }}
+                    title="Маркирай с цвят"
+                  />
+                  {colorPickerFor === person.id && (
+                    <div className="absolute top-full left-0 mt-1 z-50 bg-white dark:bg-slate-800 rounded-lg shadow-xl border border-slate-200 dark:border-slate-700 p-2 flex items-center gap-1.5">
+                      {HIGHLIGHT_COLORS.map(c => (
+                        <button
+                          key={c.value}
+                          onClick={(e) => { e.stopPropagation(); updateHighlight(person.id, c.value) }}
+                          className="w-5 h-5 rounded-full hover:scale-125 transition-transform ring-1 ring-black/10"
+                          style={{ backgroundColor: c.value }}
+                          title={c.label}
+                        />
+                      ))}
+                      <button
+                        onClick={(e) => { e.stopPropagation(); updateHighlight(person.id, null) }}
+                        className="w-5 h-5 rounded-full border-2 border-slate-300 dark:border-slate-600 hover:scale-125 transition-transform flex items-center justify-center text-slate-400 text-[10px]"
+                        title="Без цвят"
+                      >
+                        ✕
+                      </button>
+                    </div>
+                  )}
+                </div>
               </div>
               <PersonCard person={person} />
             </div>
@@ -330,11 +422,14 @@ export default function DirectoryGrid({ people, onSelectionChange, isLoading: is
                 </tr>
               </thead>
               <tbody>
-                {people.map((person) => (
+                {people.map((person) => {
+                  const highlight = getHighlight(person)
+                  return (
                   <tr
                     key={person.id}
                     onClick={() => router.push(`/directory/${person.id}`)}
                     className="border-b border-slate-100 dark:border-slate-700/50 hover:bg-slate-50 dark:hover:bg-slate-700/50 cursor-pointer transition-colors"
+                    style={highlight ? { backgroundColor: `${highlight}12` } : undefined}
                   >
                     <td className="px-3 py-2.5" onClick={(e) => e.stopPropagation()}>
                       <input
@@ -345,7 +440,35 @@ export default function DirectoryGrid({ people, onSelectionChange, isLoading: is
                       />
                     </td>
                     <td className="px-3 py-2.5">
-                      <div className="flex items-center gap-3">
+                      <div className="flex items-center gap-2">
+                        <div className="color-picker-wrapper relative flex-shrink-0" onClick={(e) => e.stopPropagation()}>
+                          <button
+                            onClick={() => setColorPickerFor(colorPickerFor === person.id ? null : person.id)}
+                            className="w-3 h-3 rounded-full hover:scale-150 transition-transform"
+                            style={{ backgroundColor: highlight || '#d1d5db', boxShadow: highlight ? `0 0 0 1px ${highlight}` : undefined }}
+                            title="Маркирай с цвят"
+                          />
+                          {colorPickerFor === person.id && (
+                            <div className="absolute top-full left-0 mt-1 z-50 bg-white dark:bg-slate-800 rounded-lg shadow-xl border border-slate-200 dark:border-slate-700 p-2 flex items-center gap-1.5">
+                              {HIGHLIGHT_COLORS.map(c => (
+                                <button
+                                  key={c.value}
+                                  onClick={() => updateHighlight(person.id, c.value)}
+                                  className="w-5 h-5 rounded-full hover:scale-125 transition-transform ring-1 ring-black/10"
+                                  style={{ backgroundColor: c.value }}
+                                  title={c.label}
+                                />
+                              ))}
+                              <button
+                                onClick={() => updateHighlight(person.id, null)}
+                                className="w-5 h-5 rounded-full border-2 border-slate-300 dark:border-slate-600 hover:scale-125 transition-transform flex items-center justify-center text-slate-400 text-[10px]"
+                                title="Без цвят"
+                              >
+                                ✕
+                              </button>
+                            </div>
+                          )}
+                        </div>
                         <div className="h-8 w-8 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center flex-shrink-0">
                           <User className="h-4 w-4 text-white" />
                         </div>
@@ -410,7 +533,8 @@ export default function DirectoryGrid({ people, onSelectionChange, isLoading: is
                       )}
                     </td>
                   </tr>
-                ))}
+                  )
+                })}
               </tbody>
             </table>
           </div>

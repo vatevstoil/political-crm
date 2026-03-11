@@ -89,14 +89,14 @@ export default function TagSelector({ personId, onTagsChange }: TagSelectorProps
   }
 
   return (
-    <div className="relative z-10 bg-white/60 dark:bg-slate-800/60 backdrop-blur-md border border-slate-200/60 dark:border-slate-700/60 rounded-2xl p-4 shadow-sm overflow-visible">
-      <div className="flex items-center gap-2 mb-3">
-        <Tag className="h-4 w-4 text-cyan-600 dark:text-cyan-400" />
+    <div className="relative z-10 bg-white/60 dark:bg-slate-800/60 backdrop-blur-md border border-slate-200/60 dark:border-slate-700/60 rounded-xl p-3 shadow-sm overflow-visible">
+      <div className="flex items-center gap-1.5 mb-1.5">
+        <Tag className="h-3.5 w-3.5 text-cyan-600 dark:text-cyan-400" />
         <h3 className="text-sm font-semibold text-slate-700 dark:text-slate-200">Тагове</h3>
       </div>
 
       {/* Current tags */}
-      <div className="flex flex-wrap gap-1.5 mb-3 min-h-[24px]">
+      <div className="flex flex-wrap gap-1 mb-2 min-h-[20px]">
         {personTags.length === 0 ? (
           <span className="text-xs text-slate-400 dark:text-slate-500">Няма тагове</span>
         ) : (

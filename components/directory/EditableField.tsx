@@ -13,9 +13,10 @@ interface EditableFieldProps {
   type?: 'text' | 'date'
   valueClassName?: string
   emptyLabel?: string  // custom placeholder when value is empty, default "Не е зададено"
+  emptyClassName?: string  // custom class for empty placeholder
 }
 
-export default function EditableField({ label, value, icon: Icon, onSave, options, type = 'text', valueClassName, emptyLabel }: EditableFieldProps) {
+export default function EditableField({ label, value, icon: Icon, onSave, options, type = 'text', valueClassName, emptyLabel, emptyClassName }: EditableFieldProps) {
   const [isEditing, setIsEditing] = useState(false)
   const [editValue, setEditValue] = useState(value || '')
   const [isSaving, setIsSaving] = useState(false)
@@ -60,20 +61,20 @@ export default function EditableField({ label, value, icon: Icon, onSave, option
   }
 
   return (
-      <div className="flex items-start gap-2 mb-3 group">
-        {Icon && <Icon className="h-4 w-4 text-slate-500 dark:text-slate-400 mt-0.5 flex-shrink-0" />}
+      <div className="flex items-start gap-1 mb-0.5 group">
+        {Icon && <Icon className="h-3 w-3 text-slate-500 dark:text-slate-400 mt-0.5 flex-shrink-0" />}
         <div className="flex-1 min-w-0">
-          {label && <p className="text-sm font-bold text-slate-700 dark:text-slate-400 uppercase tracking-wide mb-0.5">{label}</p>}
+          {label && <p className="text-[11px] font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wide leading-tight">{label}</p>}
 
         {isEditing ? (
-          <div className="mt-1 space-y-1.5">
+          <div className="space-y-1">
             {options ? (
               <select
                 // eslint-disable-next-line @typescript-eslint/no-explicit-any
                 ref={inputRef as any}
                 value={editValue}
                 onChange={(e) => setEditValue(e.target.value)}
-                className="w-full text-sm border border-slate-300 dark:border-slate-600 rounded px-2.5 py-1.5 focus:outline-none focus:ring-2 focus:ring-blue-500 bg-slate-50 dark:bg-slate-700 text-slate-800 dark:text-slate-200 font-semibold"
+                className="w-full text-sm border border-slate-300 dark:border-slate-600 rounded px-2 py-1 focus:outline-none focus:ring-2 focus:ring-blue-500 bg-slate-50 dark:bg-slate-700 text-slate-800 dark:text-slate-200 font-semibold"
                 onKeyDown={handleKeyDown}
                 title="Избери опция"
               >
@@ -88,7 +89,7 @@ export default function EditableField({ label, value, icon: Icon, onSave, option
                 type={type}
                 value={editValue}
                 onChange={(e) => setEditValue(e.target.value)}
-                className="w-full text-sm border border-slate-300 dark:border-slate-600 rounded px-2.5 py-1.5 focus:outline-none focus:ring-2 focus:ring-blue-500 bg-slate-50 dark:bg-slate-700 text-slate-800 dark:text-slate-200 font-semibold"
+                className="w-full text-sm border border-slate-300 dark:border-slate-600 rounded px-2 py-1 focus:outline-none focus:ring-2 focus:ring-blue-500 bg-slate-50 dark:bg-slate-700 text-slate-800 dark:text-slate-200 font-semibold"
                 onKeyDown={handleKeyDown}
                 title={type === 'date' ? 'Избери дата' : 'Въведи текст'}
               />
@@ -120,16 +121,16 @@ export default function EditableField({ label, value, icon: Icon, onSave, option
             role="button"
             tabIndex={0}
             aria-label={`Редактирай ${label}`}
-            className="flex items-center gap-2 cursor-pointer hover:bg-slate-100 dark:hover:bg-slate-700/50 rounded px-1 -ml-1 py-0.5 transition-colors group/field"
+            className="flex items-center gap-1.5 cursor-pointer hover:bg-slate-100 dark:hover:bg-slate-700/50 rounded px-1 -ml-1 transition-colors group/field"
           >
             {value ? (
-              <p className={valueClassName || "text-base text-emerald-700 dark:text-emerald-400 font-semibold break-words leading-relaxed"}>
+              <p className={valueClassName || "text-sm text-emerald-700 dark:text-emerald-400 font-semibold break-words leading-tight"}>
                 {type === 'date'
                   ? new Date(value).toLocaleDateString('bg-BG', { day: 'numeric', month: 'long', year: 'numeric' })
                   : options?.find(o => o.value === value)?.label ?? value}
               </p>
             ) : (
-              <p className="text-sm text-slate-400 dark:text-slate-500 italic">{emptyLabel ?? 'Не е зададено'}</p>
+              <p className={emptyClassName || "text-xs text-slate-400 dark:text-slate-500 italic"}>{emptyLabel ?? 'Не е зададено'}</p>
             )}
             <Pencil className="h-3.5 w-3.5 text-slate-400 dark:text-slate-500 opacity-0 group-hover/field:opacity-100 group-focus-visible/field:opacity-100 flex-shrink-0" />
           </div>

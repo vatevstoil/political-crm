@@ -158,6 +158,64 @@ export async function removeRelation(id: number, personId: number): Promise<Acti
   }
 }
 
+export async function updateRelation(
+  id: number,
+  personId: number,
+  type: string,
+  description?: string | null
+): Promise<ActionResult> {
+  const parsedId = z.number().int().positive().safeParse(id)
+  const parsedPersonId = z.number().int().positive().safeParse(personId)
+  const parsedType = z.enum(['family', 'colleague', 'referral', 'mentor', 'neighbor', 'party']).safeParse(type)
+  if (!parsedId.success || !parsedPersonId.success || !parsedType.success) {
+    return { success: false, error: 'Невалидни параметри.' }
+  }
+
+  try {
+    await prisma.$transaction(async (tx) => {
+      // Find the original relation
+      const relation = await tx.personRelation.findUnique({
+        where: { id: parsedId.data },
+      })
+      if (!relation) throw new Error('Relation not found')
+
+      // Update A → B
+      await tx.personRelation.update({
+        where: { id: parsedId.data },
+        data: {
+          type: parsedType.data,
+          description: description || null,
+        },
+      })
+
+      // Update reverse B → A if it exists
+      const reverse = await tx.personRelation.findUnique({
+        where: {
+          personId_relatedId: {
+            personId: relation.relatedId,
+            relatedId: relation.personId,
+          },
+        },
+      })
+      if (reverse) {
+        const reverseType = REVERSE_TYPES[parsedType.data] || parsedType.data
+        const reverseDesc = getReverseDescription(description || null)
+        await tx.personRelation.update({
+          where: { id: reverse.id },
+          data: {
+            type: reverseType,
+            description: reverseDesc,
+          },
+        })
+      }
+    })
+    return { success: true }
+  } catch (error) {
+    console.error('Failed to update relation:', error)
+    return { success: false, error: 'Грешка при обновяване на връзка.' }
+  }
+}
+
 export async function getPersonRelations(personId: number): Promise<PersonRelationWithDetails[]> {
   try {
     // Fetch relations where this person is the source (A → B)

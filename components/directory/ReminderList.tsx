@@ -56,48 +56,48 @@ export default function ReminderList({ reminders, personId, onChanged }: Reminde
   const overdueCount = reminders.filter(r => !r.isCompleted && isOverdue(r.dueDate)).length
 
   return (
-    <div className="space-y-3">
+    <div className="space-y-1.5">
       {overdueCount > 0 && (
-        <div className="p-3 bg-red-50 dark:bg-red-900/20 rounded-xl border border-red-200 dark:border-red-800">
-          <p className="text-base font-bold text-red-700 dark:text-red-400 flex items-center">
-            <Bell className="h-5 w-5 mr-2" />
-            {overdueCount} просрочени напомняния
+        <div className="px-2 py-1.5 bg-red-50 dark:bg-red-900/20 rounded-lg border border-red-200 dark:border-red-800">
+          <p className="text-xs font-bold text-red-700 dark:text-red-400 flex items-center">
+            <Bell className="h-3.5 w-3.5 mr-1.5" />
+            {overdueCount} просрочени
           </p>
         </div>
       )}
 
-      <div className="space-y-2">
+      <div className="space-y-1">
         {reminders.map(reminder => {
           const overdue = !reminder.isCompleted && isOverdue(reminder.dueDate)
           const Icon = typeIcons[reminder.type] || Bell
           return (
             <div
               key={reminder.id}
-              className={`glass-card glass-card-hover p-4 ${
-                reminder.isCompleted ? 'opacity-60' : overdue ? 'border-l-4 border-l-red-400' : 'border-l-4 border-l-amber-400'
+              className={`rounded-lg px-2.5 py-1.5 ${
+                reminder.isCompleted ? 'opacity-60 bg-slate-50 dark:bg-slate-800/50' : overdue ? 'border-l-3 border-l-red-400 bg-red-50/50 dark:bg-red-900/10' : 'border-l-3 border-l-amber-400 bg-amber-50/50 dark:bg-amber-900/10'
               }`}
             >
-              <div className="flex items-start justify-between">
+              <div className="flex items-center justify-between gap-1">
                 <button
                   onClick={() => handleToggle(reminder.id)}
-                  className="flex items-start gap-3 text-left flex-1"
+                  className="flex items-center gap-2 text-left flex-1 min-w-0"
                 >
                   {reminder.isCompleted ? (
-                    <CheckCircle className="h-6 w-6 text-teal-600 flex-shrink-0 mt-0.5" />
+                    <CheckCircle className="h-4 w-4 text-teal-600 flex-shrink-0" />
                   ) : (
-                    <Circle className={`h-6 w-6 flex-shrink-0 mt-0.5 ${overdue ? 'text-red-500' : 'text-amber-500'}`} />
+                    <Circle className={`h-4 w-4 flex-shrink-0 ${overdue ? 'text-red-500' : 'text-amber-500'}`} />
                   )}
-                  <div className="flex-1">
-                    <span className={`text-base font-bold block ${reminder.isCompleted ? 'line-through text-slate-500 dark:text-slate-500' : 'text-slate-900 dark:text-slate-100'}`}>
+                  <div className="flex-1 min-w-0">
+                    <span className={`text-sm font-semibold block truncate ${reminder.isCompleted ? 'line-through text-slate-500 dark:text-slate-500' : 'text-slate-900 dark:text-slate-100'}`}>
                       {reminder.title}
                     </span>
-                    <div className="flex items-center gap-3 mt-1 text-sm">
-                      <span className={`flex items-center gap-1 ${overdue ? 'text-red-600 dark:text-red-400 font-semibold' : 'text-slate-500 dark:text-slate-400'}`}>
-                        <Calendar className="h-3.5 w-3.5" />
+                    <div className="flex items-center gap-2 text-xs">
+                      <span className={`flex items-center gap-0.5 ${overdue ? 'text-red-600 dark:text-red-400 font-semibold' : 'text-slate-500 dark:text-slate-400'}`}>
+                        <Calendar className="h-3 w-3" />
                         {formatDate(reminder.dueDate)}
                       </span>
-                      <span className="flex items-center gap-1 text-slate-400 dark:text-slate-500">
-                        <Icon className="h-3.5 w-3.5" />
+                      <span className="flex items-center gap-0.5 text-slate-400 dark:text-slate-500">
+                        <Icon className="h-3 w-3" />
                         {typeLabels[reminder.type] || reminder.type}
                       </span>
                     </div>
@@ -105,10 +105,10 @@ export default function ReminderList({ reminders, personId, onChanged }: Reminde
                 </button>
                 <button
                   onClick={() => handleDelete(reminder.id)}
-                  className="text-slate-400 hover:text-red-500 transition-all p-1"
+                  className="text-slate-400 hover:text-red-500 transition-all p-0.5"
                   title="Изтрий"
                 >
-                  <Trash2 className="h-4 w-4" />
+                  <Trash2 className="h-3.5 w-3.5" />
                 </button>
               </div>
             </div>

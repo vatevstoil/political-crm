@@ -34,6 +34,7 @@ const UpdatePersonSchema = z.object({
   university: z.string().optional().or(z.null()),
   specialty: z.string().optional().or(z.null()),
   egn: z.string().regex(/^\d{10}$/).optional().or(z.literal('')).or(z.null()),
+  highlightColor: z.string().optional().or(z.literal('')).or(z.null()),
 })
 
 export async function PATCH(

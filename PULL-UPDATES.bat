@@ -16,6 +16,17 @@ echo  Текущ клон:
 git branch --show-current
 echo.
 
+:: === BACKUP DATABASE BEFORE PULL ===
+if exist "prisma\dev.db" (
+    echo  [i] Създаване на резервно копие на базата данни...
+    if not exist "prisma\backups" mkdir "prisma\backups"
+    for /f "tokens=1-3 delims=/ " %%a in ('date /t') do set d=%%c-%%b-%%a
+    for /f "tokens=1-2 delims=: " %%a in ('time /t') do set t=%%a%%b
+    copy /Y "prisma\dev.db" "prisma\backups\dev_%d%_%t%.db" >nul
+    echo  [OK] Backup: prisma\backups\dev_%d%_%t%.db
+    echo.
+)
+
 :: Pull latest changes
 echo  Изтегляне на промени...
 git pull

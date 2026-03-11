@@ -17,11 +17,11 @@ export default function EngagementStats({ personId }: EngagementStatsProps) {
 
   if (!data) {
     return (
-      <div className="glass-panel p-5 animate-pulse">
-        <div className="h-5 bg-slate-200 dark:bg-slate-700 rounded w-32 mb-4" />
-        <div className="space-y-2">
-          <div className="h-4 bg-slate-200 dark:bg-slate-700 rounded w-full" />
-          <div className="h-4 bg-slate-200 dark:bg-slate-700 rounded w-3/4" />
+      <div className="glass-panel p-3 animate-pulse">
+        <div className="h-4 bg-slate-200 dark:bg-slate-700 rounded w-28 mb-2" />
+        <div className="space-y-1.5">
+          <div className="h-3 bg-slate-200 dark:bg-slate-700 rounded w-full" />
+          <div className="h-3 bg-slate-200 dark:bg-slate-700 rounded w-3/4" />
         </div>
       </div>
     )
@@ -44,18 +44,16 @@ export default function EngagementStats({ personId }: EngagementStatsProps) {
   ]
 
   return (
-    <div className="glass-panel p-5">
-      <h3 className="text-lg font-bold text-slate-900 dark:text-slate-100 mb-4 flex items-center gap-2">
-        <div className="w-7 h-7 rounded-lg bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center">
-          <TrendingUp className="h-4 w-4 text-white" />
-        </div>
+    <div className="glass-panel p-3">
+      <h3 className="text-sm font-bold text-slate-900 dark:text-slate-100 mb-1.5 flex items-center gap-1.5">
+        <TrendingUp className="h-3.5 w-3.5 text-indigo-500" />
         Ангажираност
       </h3>
 
       {/* Engagement Score Bar */}
-      <div className="mb-4">
-        <div className="flex items-center justify-between mb-1.5">
-          <span className="text-sm font-medium text-slate-700 dark:text-slate-300">Резултат</span>
+      <div className="mb-2">
+        <div className="flex items-center justify-between mb-1">
+          <span className="text-xs font-medium text-slate-700 dark:text-slate-300">Резултат</span>
           <span className={`text-sm font-bold ${level.text}`}>
             {data.engagementScore}/100 — {level.label}
           </span>
@@ -69,16 +67,16 @@ export default function EngagementStats({ personId }: EngagementStatsProps) {
       </div>
 
       {/* Stats Grid */}
-      <div className="grid grid-cols-2 gap-2.5">
+      <div className="grid grid-cols-2 gap-1.5">
         {stats.map((stat) => (
           <div
             key={stat.label}
-            className="flex items-center gap-2 p-2.5 rounded-lg bg-slate-50 dark:bg-slate-900/50"
+            className="flex items-center gap-1.5 p-1.5 rounded-lg bg-slate-50 dark:bg-slate-900/50"
           >
-            <stat.icon className={`h-4 w-4 ${stat.color} flex-shrink-0`} />
+            <stat.icon className={`h-3.5 w-3.5 ${stat.color} flex-shrink-0`} />
             <div className="min-w-0">
-              <p className="text-xs text-slate-500 dark:text-slate-400 truncate">{stat.label}</p>
-              <p className="text-sm font-bold text-slate-800 dark:text-slate-200">{stat.value}</p>
+              <p className="text-[10px] text-slate-500 dark:text-slate-400 truncate leading-tight">{stat.label}</p>
+              <p className="text-xs font-bold text-slate-800 dark:text-slate-200">{stat.value}</p>
             </div>
           </div>
         ))}
